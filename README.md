@@ -113,6 +113,8 @@ Open Food Facts (barcode data)
 - Docker (optional)
 - CI/CD (GitHub Actions)
 
+---
+
 ## 👨‍💻 Author
 
 **Ruvims Ungeitis**  
