@@ -1,7 +1,6 @@
 # 🥗 Smart Nutrition & Fitness Tracker (AI-powered)
 
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
-![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-web%20%7C%20mobile-blue)
 ![AI](https://img.shields.io/badge/AI-OpenAI-purple)
 
