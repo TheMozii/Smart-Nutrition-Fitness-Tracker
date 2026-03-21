@@ -72,3 +72,51 @@ As a result, many users stop tracking or never start.
 ---
 
 ## 🧠 System Architecture (High-Level)
+
+Client (React / React Native)
+↓
+API Layer (FastAPI / Node.js)
+↓
+Services:
+
+Auth Service
+Nutrition Service
+AI Service
+↓
+Database (PostgreSQL / Supabase)
+↓
+External APIs:
+OpenAI (AI analysis)
+Open Food Facts (barcode data)
+
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- React / React Native (Expo)
+- TypeScript
+- Chart libraries (Recharts / Victory)
+
+### Backend
+- FastAPI (Python) / Node.js (Express)
+- REST API / GraphQL
+
+### Database
+- PostgreSQL / Supabase
+
+### AI Integration
+- OpenAI API (text + image analysis)
+
+### Other
+- JWT Authentication
+- Docker (optional)
+- CI/CD (GitHub Actions)
+
+## 👨‍💻 Author
+
+**Ruvims Ungeitis**  
+Computer Science Student  
+
+---
