@@ -94,16 +94,15 @@ Open Food Facts (barcode data)
 ## 🛠️ Tech Stack
 
 ### Frontend
-- React / React Native (Expo)
+- React Native (Expo)
 - TypeScript
 - Chart libraries (Recharts / Victory)
 
 ### Backend
-- FastAPI (Python) / Node.js (Express)
-- REST API / GraphQL
+- FastAPI (Python)
 
 ### Database
-- PostgreSQL / Supabase
+- Supabase
 
 ### AI Integration
 - OpenAI API (text + image analysis)
