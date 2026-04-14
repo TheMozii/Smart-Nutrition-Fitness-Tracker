@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "axios": "^1.15.0",
+    "expo-barcode-scanner": "^13.0.1",
+    "expo-camera": "^55.0.15",
+    "expo-router": "^55.0.12",
+    "react-native-safe-area-context": "^5.7.0",
+    "react-native-screens": "^4.24.0",
+    "react-native-svg": "^15.15.4",
+    "victory-native": "^41.20.2"
+  }
+}
