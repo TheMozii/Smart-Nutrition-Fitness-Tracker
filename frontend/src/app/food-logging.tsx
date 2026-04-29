@@ -5,6 +5,7 @@ import { useFoodLogging } from '../features/food-logging/hooks';
 export default function FoodLoggingScreen() {
   const { state, dispatch } = useFoodLogging();
   const statusText = buildStatusText(state.status, state.message);
+  const statusStyle = buildStatusStyle(state.status);
 
   return (
     <View style={styles.screen}>
@@ -21,6 +22,8 @@ export default function FoodLoggingScreen() {
           style={styles.input}
           autoCapitalize="none"
           autoCorrect={false}
+          returnKeyType="search"
+          onSubmitEditing={() => dispatch({ type: 'SUBMIT_SEARCH' })}
         />
 
         <Pressable
@@ -38,14 +41,19 @@ export default function FoodLoggingScreen() {
             dispatch({ type: 'SCAN_BARCODE', value: '1234567890123' });
             dispatch({ type: 'SUBMIT_SEARCH' });
           }}
-          style={styles.secondaryButton}
+          style={[styles.secondaryButton, state.status === 'loading' && styles.buttonDisabled]}
+          disabled={state.status === 'loading'}
         >
           <Text style={styles.secondaryButtonText}>Scan Barcode</Text>
         </Pressable>
 
-        <View style={styles.statusBox}>
+        <Text style={styles.helperText}>
+          Demo action: the scan button uses a sample barcode.
+        </Text>
+
+        <View style={[styles.statusBox, statusStyle.box]}>
           <Text style={styles.statusLabel}>Status</Text>
-          <Text style={styles.statusText}>{statusText}</Text>
+          <Text style={[styles.statusText, statusStyle.text]}>{statusText}</Text>
         </View>
 
         {state.food ? (
@@ -79,6 +87,27 @@ function buildStatusText(status: string, message: string | null) {
     default:
       return 'Enter a food name to begin.';
   }
+}
+
+function buildStatusStyle(status: string) {
+  if (status === 'error') {
+    return {
+      box: styles.statusErrorBox,
+      text: styles.statusErrorText,
+    };
+  }
+
+  if (status === 'success') {
+    return {
+      box: styles.statusSuccessBox,
+      text: styles.statusSuccessText,
+    };
+  }
+
+  return {
+    box: null,
+    text: null,
+  };
 }
 
 const styles = StyleSheet.create({
@@ -147,6 +176,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  helperText: {
+    fontSize: 13,
+    color: '#666666',
+    marginBottom: 16,
+  },
   statusBox: {
     padding: 16,
     borderRadius: 12,
@@ -162,6 +196,18 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     color: '#666666',
+  },
+  statusErrorBox: {
+    backgroundColor: '#fff1f0',
+  },
+  statusErrorText: {
+    color: '#ff4d4f',
+  },
+  statusSuccessBox: {
+    backgroundColor: '#edf7ed',
+  },
+  statusSuccessText: {
+    color: '#2e7d32',
   },
   resultCard: {
     padding: 16,
