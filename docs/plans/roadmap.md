@@ -8,6 +8,29 @@ The project is divided into stages (sprints), starting from a minimal viable pro
 
 ---
 
+## Current Assignment Update: Food Logging Module
+
+This roadmap was updated for Practical Assignment 4: Architectural Patterns and Structural Integrity.
+
+The selected feature is Food Logging. The module is implemented using the Command pattern to separate user actions from side effects such as API calls.
+
+### Completed for this assignment:
+
+- Selected Food Logging as the target feature.
+- Added pure frontend reducer logic for food logging state transitions.
+- Added command-based structure for food search by name and barcode.
+- Added backend domain mapper for normalizing food API responses.
+- Updated architecture documentation with the Food Logging module flow.
+- Added module-level documentation explaining the selected pattern.
+
+### Pattern Used:
+
+Command pattern
+
+### Reason:
+
+The feature has multiple user-triggered actions, such as searching by food name and scanning a barcode. The Command pattern keeps these actions structured and separates pure state logic from external API calls.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.
@@ -50,7 +73,10 @@ The MVP focuses on delivering core functionality with a simple and usable system
 - Implement main food tracking functionality
 
 ### Tasks:
-- Create food logging system (manual input)
+- Create food logging system using Command pattern
+- Support search by food name
+- Support barcode-based food lookup
+- Handle food not found state
 - Integrate AI text-based food analysis (OpenAI)
 - Store meals in database
 - Calculate daily nutrition totals
@@ -78,6 +104,8 @@ The MVP focuses on delivering core functionality with a simple and usable system
 
 ### Tasks:
 - Add unit tests (backend & frontend)
+- Add unit tests for food logging reducer
+- Add unit tests for backend food mapper
 - Test API endpoints
 - Fix bugs and edge cases
 - Improve code structure
