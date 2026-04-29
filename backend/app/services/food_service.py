@@ -2,6 +2,10 @@ from dataclasses import asdict
 from typing import Any, Dict, Optional
 
 from app.domain.food.mapper import map_food_api_response
+from app.domain.food.pure_logic import (
+    normalize_barcode_query,
+    normalize_food_name_query,
+)
 
 
 MOCK_FOODS = [
@@ -29,11 +33,12 @@ MOCK_FOODS = [
 
 
 async def get_food_by_name(name: str) -> Dict[str, Any]:
+    normalized_name = normalize_food_name_query(name)
     food = next(
         (
             food_data
             for food_data in MOCK_FOODS
-            if food_data["name"].lower() == name.strip().lower()
+            if normalize_food_name_query(food_data["name"]) == normalized_name
         ),
         None,
     )
@@ -42,8 +47,13 @@ async def get_food_by_name(name: str) -> Dict[str, Any]:
 
 
 async def get_food_by_barcode(barcode: str) -> Dict[str, Any]:
+    normalized_barcode = normalize_barcode_query(barcode)
     food = next(
-        (food_data for food_data in MOCK_FOODS if food_data["barcode"] == barcode.strip()),
+        (
+            food_data
+            for food_data in MOCK_FOODS
+            if normalize_barcode_query(food_data["barcode"]) == normalized_barcode
+        ),
         None,
     )
 
