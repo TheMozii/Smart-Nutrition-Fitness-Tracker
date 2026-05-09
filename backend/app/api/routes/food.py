@@ -9,6 +9,8 @@ async def search_food(name: str = Query(..., min_length=1)):
 
     if result["status"] == "not_found":
         raise HTTPException(status_code=404, detail=result["message"])
+    if result["status"] == "error":
+        raise HTTPException(status_code=502, detail=result["message"])
 
     return result
 
@@ -19,5 +21,7 @@ async def search_food_by_barcode(barcode: str):
 
     if result["status"] == "not_found":
         raise HTTPException(status_code=404, detail=result["message"])
+    if result["status"] == "error":
+        raise HTTPException(status_code=502, detail=result["message"])
 
     return result

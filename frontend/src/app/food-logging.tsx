@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { useFoodLogging } from '../features/food-logging/hooks';
 
+const DEMO_BARCODE = '3017624010701';
+
 export default function FoodLoggingScreen() {
   const { state, dispatch } = useFoodLogging();
   const statusText = buildStatusText(state.status, state.message);
@@ -38,7 +40,7 @@ export default function FoodLoggingScreen() {
 
         <Pressable
           onPress={() => {
-            dispatch({ type: 'SCAN_BARCODE', value: '1234567890123' });
+            dispatch({ type: 'SCAN_BARCODE', value: DEMO_BARCODE });
             dispatch({ type: 'SUBMIT_SEARCH' });
           }}
           style={[styles.secondaryButton, state.status === 'loading' && styles.buttonDisabled]}
@@ -48,7 +50,7 @@ export default function FoodLoggingScreen() {
         </Pressable>
 
         <Text style={styles.helperText}>
-          Demo action: the scan button uses a sample barcode.
+          Demo action: the scan button uses barcode {DEMO_BARCODE}.
         </Text>
 
         <View style={[styles.statusBox, statusStyle.box]}>
