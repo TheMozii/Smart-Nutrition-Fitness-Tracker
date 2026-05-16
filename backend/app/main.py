@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.env import load_environment
+
+load_environment()
+
 from app.api.routes import health, food
 
 app = FastAPI(title="Smart Nutrition & Fitness Tracker API")

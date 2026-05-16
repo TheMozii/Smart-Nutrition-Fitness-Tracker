@@ -23,8 +23,10 @@ flowchart TD
     FoodRoute --> FoodService[Food Service]
     FoodService --> Mapper[Pure Food Mapper]
     FoodService --> ExternalAPI[Open Food Facts API]
+    FoodService --> OpenAI[OpenAI API]
 
     Mapper --> FoodRoute
     FoodRoute --> Service
     Service --> FoodModule
     FoodModule --> User
+```

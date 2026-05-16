@@ -1,14 +1,18 @@
 from dataclasses import asdict
+import json
+import os
 from typing import Any, Dict, Mapping, Optional
 
 import httpx
 
+from app.core.env import load_environment
 from app.domain.food.mapper import map_food_api_response
 from app.domain.food.pure_logic import (
     normalize_barcode_query,
     normalize_food_name_query,
 )
 
+load_environment()
 
 OPEN_FOOD_FACTS_BASE_URL = "https://world.openfoodfacts.org"
 OPEN_FOOD_FACTS_SEARCH_BASE_URL = "https://search.openfoodfacts.org"
@@ -20,6 +24,10 @@ OPEN_FOOD_FACTS_HEADERS = {
     ),
 }
 OPEN_FOOD_FACTS_FIELDS = "code,product_name,nutriments"
+OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
+OPENAI_TIMEOUT_SECONDS = 20.0
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.2")
+AI_ANALYSIS_APPROXIMATION_MESSAGE = "AI estimate. Values are approximate."
 
 
 async def get_food_by_name(name: str) -> Dict[str, Any]:
@@ -48,6 +56,44 @@ async def get_food_by_barcode(barcode: str) -> Dict[str, Any]:
     return _to_response(api_data)
 
 
+async def analyze_food_text(description: str) -> Dict[str, Any]:
+    normalized_description = " ".join(description.strip().split())
+    if not normalized_description:
+        return _error_response("Please enter a meal description.")
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return _error_response("OpenAI API key is not configured.")
+
+    try:
+        estimate = await _request_ai_nutrition_estimate(
+            normalized_description,
+            api_key,
+        )
+    except httpx.HTTPStatusError as error:
+        return _error_response(_build_openai_error_message(error))
+    except (httpx.HTTPError, ValueError, json.JSONDecodeError):
+        return _error_response("AI food analysis is unavailable right now.")
+
+    response = _to_response(
+        {
+            "name": estimate.get("meal_name") or "Estimated meal",
+            "barcode": None,
+            "nutriments": {
+                "calories": estimate.get("calories"),
+                "protein": estimate.get("protein"),
+                "carbs": estimate.get("carbs"),
+                "fats": estimate.get("fats"),
+            },
+        }
+    )
+
+    if response["status"] == "success":
+        response["message"] = AI_ANALYSIS_APPROXIMATION_MESSAGE
+
+    return response
+
+
 def _to_response(food: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     result = map_food_api_response(food)
 
@@ -64,6 +110,18 @@ def _error_response(message: str) -> Dict[str, Any]:
         "food": None,
         "message": message,
     }
+
+
+def _build_openai_error_message(error: httpx.HTTPStatusError) -> str:
+    status_code = error.response.status_code
+
+    if status_code == 401:
+        return "OpenAI API key is invalid or unauthorized."
+
+    if status_code == 429:
+        return "OpenAI quota or rate limit was reached. Check the API plan and billing."
+
+    return "AI food analysis is unavailable right now."
 
 
 async def _search_product_by_name(name: str) -> Optional[Dict[str, Any]]:
@@ -125,6 +183,106 @@ async def _fetch_json(url: str, params: Mapping[str, Any]) -> Dict[str, Any]:
         return data
 
     return {}
+
+
+async def _request_ai_nutrition_estimate(
+    description: str,
+    api_key: str,
+) -> Dict[str, Any]:
+    payload = {
+        "model": OPENAI_MODEL,
+        "input": [
+            {
+                "role": "system",
+                "content": (
+                    "Estimate nutrition for a user's meal description. "
+                    "Return approximate values only, not medical advice. "
+                    "Use grams for protein, carbs, and fats. "
+                    "Use kcal for calories."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Meal description: {description}",
+            },
+        ],
+        "text": {
+            "format": {
+                "type": "json_schema",
+                "name": "nutrition_estimate",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "meal_name": {"type": "string"},
+                        "calories": {"type": "number"},
+                        "protein": {"type": "number"},
+                        "carbs": {"type": "number"},
+                        "fats": {"type": "number"},
+                    },
+                    "required": [
+                        "meal_name",
+                        "calories",
+                        "protein",
+                        "carbs",
+                        "fats",
+                    ],
+                },
+            },
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=OPENAI_TIMEOUT_SECONDS) as client:
+        response = await client.post(
+            OPENAI_RESPONSES_URL,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+        response.raise_for_status()
+        data = response.json()
+
+    output_text = _extract_response_output_text(data)
+    if not output_text:
+        raise ValueError("OpenAI response did not include output text.")
+
+    estimate = json.loads(output_text)
+    if isinstance(estimate, dict):
+        return estimate
+
+    raise ValueError("OpenAI response was not a JSON object.")
+
+
+def _extract_response_output_text(data: Mapping[str, Any]) -> Optional[str]:
+    output_text = data.get("output_text")
+    if isinstance(output_text, str):
+        return output_text
+
+    output = data.get("output")
+    if not isinstance(output, list):
+        return None
+
+    for item in output:
+        if not isinstance(item, Mapping):
+            continue
+
+        content = item.get("content")
+        if not isinstance(content, list):
+            continue
+
+        for content_item in content:
+            if not isinstance(content_item, Mapping):
+                continue
+
+            if content_item.get("type") == "output_text":
+                text = content_item.get("text")
+                if isinstance(text, str):
+                    return text
+
+    return None
 
 
 def _normalize_open_food_facts_product(

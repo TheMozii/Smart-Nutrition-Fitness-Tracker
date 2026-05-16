@@ -29,7 +29,8 @@ export type FoodLoggingEvent =
   | { type: 'TYPE_NAME'; value: string }
   | { type: 'SCAN_BARCODE'; value: string }
   | { type: 'SUBMIT_SEARCH' }
-  | { type: 'SEARCH_SUCCESS'; food: NutritionInfo }
+  | { type: 'SUBMIT_AI_ANALYSIS' }
+  | { type: 'SEARCH_SUCCESS'; food: NutritionInfo; message?: string | null }
   | { type: 'SEARCH_NOT_FOUND' }
   | { type: 'SEARCH_ERROR'; message?: string }
   | { type: 'RESET' };
@@ -37,7 +38,8 @@ export type FoodLoggingEvent =
 export type FoodLoggingCommand =
   | { type: 'NONE' }
   | { type: 'FETCH_FOOD_BY_NAME'; name: string }
-  | { type: 'FETCH_FOOD_BY_BARCODE'; barcode: string };
+  | { type: 'FETCH_FOOD_BY_BARCODE'; barcode: string }
+  | { type: 'ANALYZE_MEAL_TEXT'; description: string };
 
 export type FoodLoggingResult = {
   state: FoodLoggingState;

@@ -85,6 +85,36 @@ import {
           },
         };
       }
+
+      case 'SUBMIT_AI_ANALYSIS': {
+        const description = state.query.trim();
+
+        if (!description) {
+          return {
+            state: {
+              ...state,
+              status: 'error',
+              message: 'Please enter a meal description.',
+              food: null,
+            },
+            command: { type: 'NONE' },
+          };
+        }
+
+        return {
+          state: {
+            ...state,
+            status: 'loading',
+            mode: 'name',
+            food: null,
+            message: null,
+          },
+          command: {
+            type: 'ANALYZE_MEAL_TEXT',
+            description,
+          },
+        };
+      }
   
       case 'SEARCH_SUCCESS': {
         return {
@@ -92,7 +122,7 @@ import {
             ...state,
             status: 'success',
             food: event.food,
-            message: null,
+            message: event.message ?? null,
           },
           command: { type: 'NONE' },
         };

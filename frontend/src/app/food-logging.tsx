@@ -14,7 +14,7 @@ export default function FoodLoggingScreen() {
       <View style={styles.card}>
         <Text style={styles.title}>Food Logging</Text>
         <Text style={styles.subtitle}>
-          Search by food name or try a sample barcode.
+          Search by food name, analyze a meal description, or try a sample barcode.
         </Text>
 
         <TextInput
@@ -36,6 +36,14 @@ export default function FoodLoggingScreen() {
           <Text style={styles.primaryButtonText}>
             {state.status === 'loading' ? 'Searching...' : 'Search'}
           </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => dispatch({ type: 'SUBMIT_AI_ANALYSIS' })}
+          style={[styles.secondaryButton, state.status === 'loading' && styles.buttonDisabled]}
+          disabled={state.status === 'loading'}
+        >
+          <Text style={styles.secondaryButtonText}>Analyze with AI</Text>
         </Pressable>
 
         <Pressable
@@ -65,6 +73,9 @@ export default function FoodLoggingScreen() {
             <Text style={styles.resultRow}>Protein: {state.food.protein}g</Text>
             <Text style={styles.resultRow}>Carbs: {state.food.carbs}g</Text>
             <Text style={styles.resultRow}>Fats: {state.food.fats}g</Text>
+            {state.status === 'success' && state.message ? (
+              <Text style={styles.resultNote}>{state.message}</Text>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -226,5 +237,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#222222',
     marginBottom: 6,
+  },
+  resultNote: {
+    fontSize: 13,
+    color: '#666666',
+    marginTop: 6,
   },
 });

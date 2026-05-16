@@ -31,6 +31,23 @@ Command pattern
 
 The feature has multiple user-triggered actions, such as searching by food name and scanning a barcode. The Command pattern keeps these actions structured and separates pure state logic from external API calls.
 
+## Completed Next Step: AI Text-Based Food Analysis
+
+AI text-based food analysis has been implemented as the next MVP increment.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step.md
+```
+
+Reason:
+
+- Food lookup by name and barcode is already implemented.
+- Text-based AI analysis is part of the MVP scope.
+- It improves speed of food input without adding image recognition complexity yet.
+- It can be tracked as an experiment in the knowledge base repository.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.

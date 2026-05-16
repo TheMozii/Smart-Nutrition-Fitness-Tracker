@@ -63,3 +63,17 @@ export async function searchFoodByBarcode(
 
   return readFoodResponse(response);
 }
+
+export async function analyzeFoodText(
+  description: string
+): Promise<FoodApiResponse> {
+  const response = await fetch(`${BASE_URL}/food/analyze-text`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ description }),
+  });
+
+  return readFoodResponse(response);
+}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchFoodByBarcode, fetchFoodByName } from './service';
+import { analyzeMealText, fetchFoodByBarcode, fetchFoodByName } from './service';
 import { foodLoggingReducer } from './reducer';
 import {
   FoodLoggingCommand,
@@ -35,17 +35,18 @@ export function useFoodLogging() {
         return;
       }
 
-      const result =
-        command.type === 'FETCH_FOOD_BY_NAME'
-          ? await fetchFoodByName(command.name)
-          : await fetchFoodByBarcode(command.barcode);
+      const result = await runFoodLoggingCommand(command);
 
       if (cancelled) {
         return;
       }
 
       if (result.type === 'success') {
-        dispatch({ type: 'SEARCH_SUCCESS', food: result.food });
+        dispatch({
+          type: 'SEARCH_SUCCESS',
+          food: result.food,
+          message: result.message,
+        });
         return;
       }
 
@@ -68,4 +69,17 @@ export function useFoodLogging() {
     state,
     dispatch,
   };
+}
+
+async function runFoodLoggingCommand(command: FoodLoggingCommand) {
+  switch (command.type) {
+    case 'FETCH_FOOD_BY_NAME':
+      return fetchFoodByName(command.name);
+    case 'FETCH_FOOD_BY_BARCODE':
+      return fetchFoodByBarcode(command.barcode);
+    case 'ANALYZE_MEAL_TEXT':
+      return analyzeMealText(command.description);
+    case 'NONE':
+      throw new Error('No command to run.');
+  }
 }
