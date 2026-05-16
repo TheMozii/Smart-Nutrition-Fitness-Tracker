@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import {
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+} from 'react-native';
 import { useFoodLogging } from '../features/food-logging/hooks';
 
 const DEMO_BARCODE = '3017624010701';
@@ -10,7 +17,12 @@ export default function FoodLoggingScreen() {
   const statusStyle = buildStatusStyle(state.status);
 
   return (
-    <View style={styles.screen}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.screenContent}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator
+    >
       <View style={styles.card}>
         <Text style={styles.title}>Food Logging</Text>
         <Text style={styles.subtitle}>
@@ -76,11 +88,79 @@ export default function FoodLoggingScreen() {
             {state.status === 'success' && state.message ? (
               <Text style={styles.resultNote}>{state.message}</Text>
             ) : null}
+            <Pressable
+              onPress={() => dispatch({ type: 'ADD_FOOD_TO_DAILY_LOG' })}
+              style={styles.addButton}
+            >
+              <Text style={styles.addButtonText}>Add to Day</Text>
+            </Pressable>
           </View>
         ) : null}
+
+        <View style={styles.summarySection}>
+          <Text style={styles.sectionTitle}>Daily Summary</Text>
+          <View style={styles.totalsGrid}>
+            <NutritionTotal label="Calories" value={state.dailyTotals.calories} />
+            <NutritionTotal label="Protein" value={state.dailyTotals.protein} suffix="g" />
+            <NutritionTotal label="Carbs" value={state.dailyTotals.carbs} suffix="g" />
+            <NutritionTotal label="Fats" value={state.dailyTotals.fats} suffix="g" />
+          </View>
+
+          {state.loggedFoods.length ? (
+            <View style={styles.loggedFoodList}>
+              {state.loggedFoods.map((food) => (
+                <View key={food.id} style={styles.loggedFoodRow}>
+                  <View style={styles.loggedFoodText}>
+                    <Text style={styles.loggedFoodName}>{food.name}</Text>
+                    <Text style={styles.loggedFoodMacros}>
+                      {formatNutritionValue(food.calories)} cal · P {formatNutritionValue(food.protein)}g · C {formatNutritionValue(food.carbs)}g · F {formatNutritionValue(food.fats)}g
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() =>
+                      dispatch({
+                        type: 'REMOVE_FOOD_FROM_DAILY_LOG',
+                        id: food.id,
+                      })
+                    }
+                    style={styles.removeButton}
+                  >
+                    <Text style={styles.removeButtonText}>Remove</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.emptySummaryText}>
+              No foods added yet.
+            </Text>
+          )}
+        </View>
       </View>
+    </ScrollView>
+  );
+}
+
+type NutritionTotalProps = {
+  label: string;
+  value: number;
+  suffix?: string;
+};
+
+function NutritionTotal({ label, value, suffix = '' }: NutritionTotalProps) {
+  return (
+    <View style={styles.totalItem}>
+      <Text style={styles.totalLabel}>{label}</Text>
+      <Text style={styles.totalValue}>
+        {formatNutritionValue(value)}
+        {suffix}
+      </Text>
     </View>
   );
+}
+
+function formatNutritionValue(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 function buildStatusText(status: string, message: string | null) {
@@ -125,8 +205,14 @@ function buildStatusStyle(status: string) {
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
     width: '100%',
+  },
+  screenContent: {
     padding: 16,
+    paddingBottom: 40,
+    alignItems: 'center',
+    flexGrow: 1,
   },
   card: {
     width: '100%',
@@ -226,6 +312,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     backgroundColor: '#f4f7fb',
+    marginBottom: 16,
   },
   resultTitle: {
     fontSize: 18,
@@ -242,5 +329,92 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666666',
     marginTop: 6,
+  },
+  addButton: {
+    backgroundColor: '#2e7d32',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  addButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  summarySection: {
+    borderTopWidth: 1,
+    borderTopColor: '#d0d7de',
+    paddingTop: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222222',
+    marginBottom: 12,
+  },
+  totalsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  totalItem: {
+    width: '48%',
+    backgroundColor: '#f4f7fb',
+    borderRadius: 12,
+    padding: 12,
+  },
+  totalLabel: {
+    fontSize: 13,
+    color: '#666666',
+    marginBottom: 4,
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222222',
+  },
+  loggedFoodList: {
+    gap: 8,
+  },
+  loggedFoodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#d0d7de',
+    borderRadius: 12,
+    padding: 12,
+  },
+  loggedFoodText: {
+    flex: 1,
+  },
+  loggedFoodName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#222222',
+    marginBottom: 4,
+  },
+  loggedFoodMacros: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  removeButton: {
+    borderWidth: 1,
+    borderColor: '#ff4d4f',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  removeButtonText: {
+    color: '#ff4d4f',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  emptySummaryText: {
+    fontSize: 14,
+    color: '#666666',
   },
 });

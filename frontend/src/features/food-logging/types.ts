@@ -17,11 +17,25 @@ export type NutritionInfo = {
   fats: number;
 };
 
+export type LoggedFood = NutritionInfo & {
+  id: string;
+};
+
+export type NutritionTotals = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+};
+
 export type FoodLoggingState = {
   status: Status;
   mode: SearchMode;
   query: string;
   food: NutritionInfo | null;
+  loggedFoods: LoggedFood[];
+  dailyTotals: NutritionTotals;
+  nextLoggedFoodId: number;
   message: string | null;
 };
 
@@ -31,6 +45,8 @@ export type FoodLoggingEvent =
   | { type: 'SUBMIT_SEARCH' }
   | { type: 'SUBMIT_AI_ANALYSIS' }
   | { type: 'SEARCH_SUCCESS'; food: NutritionInfo; message?: string | null }
+  | { type: 'ADD_FOOD_TO_DAILY_LOG' }
+  | { type: 'REMOVE_FOOD_FROM_DAILY_LOG'; id: string }
   | { type: 'SEARCH_NOT_FOUND' }
   | { type: 'SEARCH_ERROR'; message?: string }
   | { type: 'RESET' };

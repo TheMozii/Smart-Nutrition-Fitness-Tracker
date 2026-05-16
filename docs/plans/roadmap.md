@@ -48,6 +48,22 @@ Reason:
 - It improves speed of food input without adding image recognition complexity yet.
 - It can be tracked as an experiment in the knowledge base repository.
 
+## Completed Next Step: Daily Nutrition Summary
+
+Daily nutrition summary has been implemented as a local frontend state increment.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step_daily_summary.md
+```
+
+Reason:
+
+- Food lookup and AI analysis now produce nutrition results.
+- Users need a way to turn those results into daily totals.
+- Local state validates the workflow before Supabase persistence is added.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.

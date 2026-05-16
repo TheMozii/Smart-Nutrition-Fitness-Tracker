@@ -12,6 +12,14 @@ const initialState: FoodLoggingState = {
   mode: 'idle',
   query: '',
   food: null,
+  loggedFoods: [],
+  dailyTotals: {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+  },
+  nextLoggedFoodId: 1,
   message: null,
 };
 
