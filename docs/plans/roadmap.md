@@ -96,6 +96,22 @@ Reason:
 - The daily summary should only update after a food is saved.
 - PocketBase persistence prepares the app for dashboards and history.
 
+## Completed Next Step: Load Saved Nutrition Records
+
+Loading today's saved nutrition records from PocketBase has been implemented.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step_load_saved_nutrition.md
+```
+
+Reason:
+
+- Saved meals should restore after sign-in or refresh.
+- Daily totals should be calculated from persisted records when available.
+- Loading saved records prepares the app for dashboard and history views.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.

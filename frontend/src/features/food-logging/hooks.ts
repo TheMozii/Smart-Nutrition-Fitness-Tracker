@@ -3,6 +3,7 @@ import {
   analyzeMealText,
   fetchFoodByBarcode,
   fetchFoodByName,
+  loadSavedFoodsFromPocketBase,
   saveFoodToPocketBase,
 } from './service';
 import { foodLoggingReducer } from './reducer';
@@ -69,6 +70,14 @@ export function useFoodLogging({ authToken, userId }: UseFoodLoggingOptions) {
           return;
         }
 
+        if (result.action === 'load_saved_foods') {
+          dispatch({
+            type: 'LOAD_SAVED_FOODS_SUCCESS',
+            foods: result.foods,
+          });
+          return;
+        }
+
         dispatch({
           type: 'SEARCH_SUCCESS',
           food: result.food,
@@ -93,6 +102,10 @@ export function useFoodLogging({ authToken, userId }: UseFoodLoggingOptions) {
     };
   }, [command]);
 
+  useEffect(() => {
+    dispatch({ type: 'LOAD_SAVED_FOODS_START' });
+  }, [authToken, userId]);
+
   return {
     state,
     dispatch,
@@ -113,6 +126,8 @@ async function runFoodLoggingCommand(
       return analyzeMealText(command.description);
     case 'SAVE_FOOD_TO_POCKETBASE':
       return saveFoodToPocketBase(command.food, authToken, userId);
+    case 'LOAD_SAVED_FOODS_FROM_POCKETBASE':
+      return loadSavedFoodsFromPocketBase(authToken, userId);
     case 'NONE':
       throw new Error('No command to run.');
   }

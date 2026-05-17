@@ -24,6 +24,10 @@ export type SaveFoodResult =
   | { type: 'success'; action: 'save_food'; food: LoggedFood }
   | { type: 'error'; message: string };
 
+export type LoadSavedFoodsResult =
+  | { type: 'success'; action: 'load_saved_foods'; foods: LoggedFood[] }
+  | { type: 'error'; message: string };
+
 export async function fetchFoodByName(name: string): Promise<FoodSearchResult> {
   try {
     const response = await searchFoodByName(name);
@@ -171,6 +175,55 @@ export async function saveFoodToPocketBase(
   }
 }
 
+export async function loadSavedFoodsFromPocketBase(
+  authToken: string,
+  userId: string
+): Promise<LoadSavedFoodsResult> {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+
+    const filter = encodeURIComponent(
+      `user = "${userId}" && loggedDate >= "${startOfDay.toISOString()}" && loggedDate < "${endOfDay.toISOString()}"`
+    );
+
+    const response = await fetch(
+      `${POCKETBASE_URL}/api/collections/nutritions/records?filter=${filter}&sort=loggedDate`,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return {
+        type: 'error',
+        message: await readPocketBaseError(response),
+      };
+    }
+
+    const data = await response.json();
+
+    return {
+      type: 'success',
+      action: 'load_saved_foods',
+      foods: mapPocketBaseNutritionRecords(data),
+    };
+  } catch (error) {
+    return {
+      type: 'error',
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Could not load saved foods from PocketBase.',
+    };
+  }
+}
+
 async function readPocketBaseError(response: Response): Promise<string> {
   try {
     const data = await response.json();
@@ -210,4 +263,42 @@ function readPocketBaseFieldError(data: unknown): string | null {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function mapPocketBaseNutritionRecords(data: unknown): LoggedFood[] {
+  if (!isRecord(data) || !Array.isArray(data.items)) {
+    return [];
+  }
+
+  return data.items.filter(isRecord).map((record) => ({
+    id: readString(record.id),
+    name: readString(record.name) || 'Saved food',
+    source: readFoodSource(record.source),
+    barcode: readString(record.barcode) || undefined,
+    calories: readNumber(record.calories),
+    protein: readNumber(record.protein),
+    carbs: readNumber(record.carbs),
+    fats: readNumber(record.fats),
+    loggedDate: readString(record.loggedDate),
+  }));
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function readNumber(value: unknown): number {
+  return typeof value === 'number' ? value : 0;
+}
+
+function readFoodSource(value: unknown): FoodSource {
+  if (
+    value === 'open_food_facts' ||
+    value === 'ai_text' ||
+    value === 'manual'
+  ) {
+    return value;
+  }
+
+  return 'manual';
 }

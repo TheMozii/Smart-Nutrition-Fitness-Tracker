@@ -80,11 +80,11 @@ export function foodLoggingReducer(
       return {
         state: {
           ...state,
-            status: 'loading',
-            food: null,
-            foodSource: null,
-            message: null,
-          },
+          status: 'loading',
+          food: null,
+          foodSource: null,
+          message: null,
+        },
         command: {
           type: 'FETCH_FOOD_BY_NAME',
           name: query,
@@ -180,6 +180,30 @@ export function foodLoggingReducer(
           loggedFoods,
           dailyTotals: calculateNutritionTotals(loggedFoods),
           message: 'Food saved to daily summary.',
+        },
+        command: { type: 'NONE' },
+      };
+    }
+
+    case 'LOAD_SAVED_FOODS_START': {
+      return {
+        state: {
+          ...state,
+          message: 'Loading saved foods...',
+        },
+        command: { type: 'LOAD_SAVED_FOODS_FROM_POCKETBASE' },
+      };
+    }
+
+    case 'LOAD_SAVED_FOODS_SUCCESS': {
+      return {
+        state: {
+          ...state,
+          loggedFoods: event.foods,
+          dailyTotals: calculateNutritionTotals(event.foods),
+          message: event.foods.length
+            ? 'Saved foods loaded.'
+            : 'No saved foods for today yet.',
         },
         command: { type: 'NONE' },
       };

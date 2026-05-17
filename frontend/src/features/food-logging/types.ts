@@ -57,6 +57,8 @@ export type FoodLoggingEvent =
     }
   | { type: 'ADD_FOOD_TO_DAILY_LOG'; loggedDate: string }
   | { type: 'SAVE_FOOD_SUCCESS'; food: LoggedFood }
+  | { type: 'LOAD_SAVED_FOODS_START' }
+  | { type: 'LOAD_SAVED_FOODS_SUCCESS'; foods: LoggedFood[] }
   | { type: 'REMOVE_FOOD_FROM_DAILY_LOG'; id: string }
   | { type: 'SEARCH_NOT_FOUND' }
   | { type: 'SEARCH_ERROR'; message?: string }
@@ -67,7 +69,8 @@ export type FoodLoggingCommand =
   | { type: 'FETCH_FOOD_BY_NAME'; name: string }
   | { type: 'FETCH_FOOD_BY_BARCODE'; barcode: string }
   | { type: 'ANALYZE_MEAL_TEXT'; description: string }
-  | { type: 'SAVE_FOOD_TO_POCKETBASE'; food: LoggedFood };
+  | { type: 'SAVE_FOOD_TO_POCKETBASE'; food: LoggedFood }
+  | { type: 'LOAD_SAVED_FOODS_FROM_POCKETBASE' };
 
 export type FoodLoggingResult = {
   state: FoodLoggingState;
