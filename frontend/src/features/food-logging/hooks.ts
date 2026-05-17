@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   analyzeMealText,
+  deleteFoodFromPocketBase,
   fetchFoodByBarcode,
   fetchFoodByName,
   loadSavedFoodsFromPocketBase,
@@ -78,6 +79,14 @@ export function useFoodLogging({ authToken, userId }: UseFoodLoggingOptions) {
           return;
         }
 
+        if (result.action === 'delete_food') {
+          dispatch({
+            type: 'DELETE_FOOD_SUCCESS',
+            id: result.id,
+          });
+          return;
+        }
+
         dispatch({
           type: 'SEARCH_SUCCESS',
           food: result.food,
@@ -128,6 +137,8 @@ async function runFoodLoggingCommand(
       return saveFoodToPocketBase(command.food, authToken, userId);
     case 'LOAD_SAVED_FOODS_FROM_POCKETBASE':
       return loadSavedFoodsFromPocketBase(authToken, userId);
+    case 'DELETE_FOOD_FROM_POCKETBASE':
+      return deleteFoodFromPocketBase(command.id, authToken);
     case 'NONE':
       throw new Error('No command to run.');
   }

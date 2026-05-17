@@ -210,6 +210,31 @@ export function foodLoggingReducer(
     }
 
     case 'REMOVE_FOOD_FROM_DAILY_LOG': {
+      const foodExists = state.loggedFoods.some((food) => food.id === event.id);
+      if (!foodExists) {
+        return {
+          state: {
+            ...state,
+            status: 'error',
+            message: 'Food was not found in the daily summary.',
+          },
+          command: { type: 'NONE' },
+        };
+      }
+
+      return {
+        state: {
+          ...state,
+          message: 'Removing food from daily summary...',
+        },
+        command: {
+          type: 'DELETE_FOOD_FROM_POCKETBASE',
+          id: event.id,
+        },
+      };
+    }
+
+    case 'DELETE_FOOD_SUCCESS': {
       const loggedFoods = state.loggedFoods.filter(
         (food) => food.id !== event.id
       );

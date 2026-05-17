@@ -28,6 +28,10 @@ export type LoadSavedFoodsResult =
   | { type: 'success'; action: 'load_saved_foods'; foods: LoggedFood[] }
   | { type: 'error'; message: string };
 
+export type DeleteFoodResult =
+  | { type: 'success'; action: 'delete_food'; id: string }
+  | { type: 'error'; message: string };
+
 export async function fetchFoodByName(name: string): Promise<FoodSearchResult> {
   try {
     const response = await searchFoodByName(name);
@@ -220,6 +224,44 @@ export async function loadSavedFoodsFromPocketBase(
         error instanceof Error
           ? error.message
           : 'Could not load saved foods from PocketBase.',
+    };
+  }
+}
+
+export async function deleteFoodFromPocketBase(
+  id: string,
+  authToken: string
+): Promise<DeleteFoodResult> {
+  try {
+    const response = await fetch(
+      `${POCKETBASE_URL}/api/collections/nutritions/records/${encodeURIComponent(id)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return {
+        type: 'error',
+        message: await readPocketBaseError(response),
+      };
+    }
+
+    return {
+      type: 'success',
+      action: 'delete_food',
+      id,
+    };
+  } catch (error) {
+    return {
+      type: 'error',
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Could not delete food from PocketBase.',
     };
   }
 }

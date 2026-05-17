@@ -112,6 +112,22 @@ Reason:
 - Daily totals should be calculated from persisted records when available.
 - Loading saved records prepares the app for dashboard and history views.
 
+## Completed Next Step: Delete Saved Nutrition Records
+
+Deleting saved nutrition records from PocketBase has been implemented.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step_delete_saved_nutrition.md
+```
+
+Reason:
+
+- Removing a food from the Daily Summary should stay consistent after refresh.
+- PocketBase ownership rules protect delete operations.
+- Local totals should update only after persistence succeeds.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.
