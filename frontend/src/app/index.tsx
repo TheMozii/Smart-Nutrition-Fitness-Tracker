@@ -31,7 +31,7 @@ export default function HomeScreen() {
         </Pressable>
       </View>
       <View style={styles.content}>
-        <FoodLoggingScreen />
+        <FoodLoggingScreen authToken={state.token ?? ''} userId={state.user.id} />
       </View>
     </SafeAreaView>
   );

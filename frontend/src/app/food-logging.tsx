@@ -11,8 +11,16 @@ import { useFoodLogging } from '../features/food-logging/hooks';
 
 const DEMO_BARCODE = '3017624010701';
 
-export default function FoodLoggingScreen() {
-  const { state, dispatch } = useFoodLogging();
+type FoodLoggingScreenProps = {
+  authToken: string;
+  userId: string;
+};
+
+export default function FoodLoggingScreen({
+  authToken,
+  userId,
+}: FoodLoggingScreenProps) {
+  const { state, dispatch } = useFoodLogging({ authToken, userId });
   const statusText = buildStatusText(state.status, state.message);
   const statusStyle = buildStatusStyle(state.status);
 
@@ -89,7 +97,12 @@ export default function FoodLoggingScreen() {
               <Text style={styles.resultNote}>{state.message}</Text>
             ) : null}
             <Pressable
-              onPress={() => dispatch({ type: 'ADD_FOOD_TO_DAILY_LOG' })}
+              onPress={() =>
+                dispatch({
+                  type: 'ADD_FOOD_TO_DAILY_LOG',
+                  loggedDate: new Date().toISOString(),
+                })
+              }
               style={styles.addButton}
             >
               <Text style={styles.addButtonText}>Add to Day</Text>

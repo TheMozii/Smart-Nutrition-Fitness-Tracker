@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { analyzeMealText, fetchFoodByBarcode, fetchFoodByName } from './service';
+import {
+  analyzeMealText,
+  fetchFoodByBarcode,
+  fetchFoodByName,
+  saveFoodToPocketBase,
+} from './service';
 import { foodLoggingReducer } from './reducer';
 import {
   FoodLoggingCommand,
@@ -12,6 +17,7 @@ const initialState: FoodLoggingState = {
   mode: 'idle',
   query: '',
   food: null,
+  foodSource: null,
   loggedFoods: [],
   dailyTotals: {
     calories: 0,
@@ -23,7 +29,12 @@ const initialState: FoodLoggingState = {
   message: null,
 };
 
-export function useFoodLogging() {
+type UseFoodLoggingOptions = {
+  authToken: string;
+  userId: string;
+};
+
+export function useFoodLogging({ authToken, userId }: UseFoodLoggingOptions) {
   const [state, setState] = useState<FoodLoggingState>(initialState);
   const [command, setCommand] = useState<FoodLoggingCommand>({ type: 'NONE' });
   const stateRef = useRef(state);
@@ -43,16 +54,25 @@ export function useFoodLogging() {
         return;
       }
 
-      const result = await runFoodLoggingCommand(command);
+      const result = await runFoodLoggingCommand(command, authToken, userId);
 
       if (cancelled) {
         return;
       }
 
       if (result.type === 'success') {
+        if (result.action === 'save_food') {
+          dispatch({
+            type: 'SAVE_FOOD_SUCCESS',
+            food: result.food,
+          });
+          return;
+        }
+
         dispatch({
           type: 'SEARCH_SUCCESS',
           food: result.food,
+          source: result.source,
           message: result.message,
         });
         return;
@@ -79,7 +99,11 @@ export function useFoodLogging() {
   };
 }
 
-async function runFoodLoggingCommand(command: FoodLoggingCommand) {
+async function runFoodLoggingCommand(
+  command: FoodLoggingCommand,
+  authToken: string,
+  userId: string
+) {
   switch (command.type) {
     case 'FETCH_FOOD_BY_NAME':
       return fetchFoodByName(command.name);
@@ -87,6 +111,8 @@ async function runFoodLoggingCommand(command: FoodLoggingCommand) {
       return fetchFoodByBarcode(command.barcode);
     case 'ANALYZE_MEAL_TEXT':
       return analyzeMealText(command.description);
+    case 'SAVE_FOOD_TO_POCKETBASE':
+      return saveFoodToPocketBase(command.food, authToken, userId);
     case 'NONE':
       throw new Error('No command to run.');
   }

@@ -80,6 +80,22 @@ Reason:
 - The app needs a login/register flow before user-specific persistence.
 - PocketBase provides email/password auth without custom backend auth logic.
 
+## Completed Next Step: PocketBase Nutrition Persistence
+
+Saving daily nutrition records to PocketBase has been implemented.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step_pocketbase_nutrition_persistence.md
+```
+
+Reason:
+
+- Authenticated users now need user-owned nutrition records.
+- The daily summary should only update after a food is saved.
+- PocketBase persistence prepares the app for dashboards and history.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.

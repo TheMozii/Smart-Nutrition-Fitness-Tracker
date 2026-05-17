@@ -21,6 +21,7 @@ export function foodLoggingReducer(
           mode: 'name',
           query,
           food: null,
+          foodSource: null,
           message: null,
         },
         command: { type: 'NONE' },
@@ -37,6 +38,7 @@ export function foodLoggingReducer(
           mode: 'barcode',
           query: barcode,
           food: null,
+          foodSource: null,
           message: null,
         },
         command: { type: 'NONE' },
@@ -53,6 +55,7 @@ export function foodLoggingReducer(
             status: 'error',
             message: 'Please enter a food name or scan a barcode.',
             food: null,
+            foodSource: null,
           },
           command: { type: 'NONE' },
         };
@@ -64,6 +67,7 @@ export function foodLoggingReducer(
             ...state,
             status: 'loading',
             food: null,
+            foodSource: null,
             message: null,
           },
           command: {
@@ -76,10 +80,11 @@ export function foodLoggingReducer(
       return {
         state: {
           ...state,
-          status: 'loading',
-          food: null,
-          message: null,
-        },
+            status: 'loading',
+            food: null,
+            foodSource: null,
+            message: null,
+          },
         command: {
           type: 'FETCH_FOOD_BY_NAME',
           name: query,
@@ -97,6 +102,7 @@ export function foodLoggingReducer(
             status: 'error',
             message: 'Please enter a meal description.',
             food: null,
+            foodSource: null,
           },
           command: { type: 'NONE' },
         };
@@ -108,6 +114,7 @@ export function foodLoggingReducer(
           status: 'loading',
           mode: 'name',
           food: null,
+          foodSource: null,
           message: null,
         },
         command: {
@@ -123,6 +130,7 @@ export function foodLoggingReducer(
           ...state,
           status: 'success',
           food: event.food,
+          foodSource: event.source,
           message: event.message ?? null,
         },
         command: { type: 'NONE' },
@@ -142,20 +150,36 @@ export function foodLoggingReducer(
       }
 
       const loggedFoods = [
-        ...state.loggedFoods,
         {
           ...state.food,
           id: String(state.nextLoggedFoodId),
+          source: state.foodSource ?? 'manual',
+          loggedDate: event.loggedDate,
         },
       ];
 
       return {
         state: {
           ...state,
+          nextLoggedFoodId: state.nextLoggedFoodId + 1,
+          message: 'Saving food to daily summary...',
+        },
+        command: {
+          type: 'SAVE_FOOD_TO_POCKETBASE',
+          food: loggedFoods[0],
+        },
+      };
+    }
+
+    case 'SAVE_FOOD_SUCCESS': {
+      const loggedFoods = [...state.loggedFoods, event.food];
+
+      return {
+        state: {
+          ...state,
           loggedFoods,
           dailyTotals: calculateNutritionTotals(loggedFoods),
-          nextLoggedFoodId: state.nextLoggedFoodId + 1,
-          message: 'Food added to daily summary.',
+          message: 'Food saved to daily summary.',
         },
         command: { type: 'NONE' },
       };
@@ -183,6 +207,7 @@ export function foodLoggingReducer(
           ...state,
           status: 'not_found',
           food: null,
+          foodSource: null,
           message: "Information about this food couldn't be found.",
         },
         command: { type: 'NONE' },
@@ -195,6 +220,7 @@ export function foodLoggingReducer(
           ...state,
           status: 'error',
           food: null,
+          foodSource: null,
           message: event.message ?? 'Something went wrong while searching.',
         },
         command: { type: 'NONE' },
@@ -208,6 +234,7 @@ export function foodLoggingReducer(
           mode: 'idle',
           query: '',
           food: null,
+          foodSource: null,
           loggedFoods: [],
           dailyTotals: {
             calories: 0,

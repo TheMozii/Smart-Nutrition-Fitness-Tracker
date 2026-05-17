@@ -19,7 +19,11 @@ export type NutritionInfo = {
 
 export type LoggedFood = NutritionInfo & {
   id: string;
+  source: FoodSource;
+  loggedDate: string;
 };
+
+export type FoodSource = 'open_food_facts' | 'ai_text' | 'manual';
 
 export type NutritionTotals = {
   calories: number;
@@ -33,6 +37,7 @@ export type FoodLoggingState = {
   mode: SearchMode;
   query: string;
   food: NutritionInfo | null;
+  foodSource: FoodSource | null;
   loggedFoods: LoggedFood[];
   dailyTotals: NutritionTotals;
   nextLoggedFoodId: number;
@@ -44,8 +49,14 @@ export type FoodLoggingEvent =
   | { type: 'SCAN_BARCODE'; value: string }
   | { type: 'SUBMIT_SEARCH' }
   | { type: 'SUBMIT_AI_ANALYSIS' }
-  | { type: 'SEARCH_SUCCESS'; food: NutritionInfo; message?: string | null }
-  | { type: 'ADD_FOOD_TO_DAILY_LOG' }
+  | {
+      type: 'SEARCH_SUCCESS';
+      food: NutritionInfo;
+      source: FoodSource;
+      message?: string | null;
+    }
+  | { type: 'ADD_FOOD_TO_DAILY_LOG'; loggedDate: string }
+  | { type: 'SAVE_FOOD_SUCCESS'; food: LoggedFood }
   | { type: 'REMOVE_FOOD_FROM_DAILY_LOG'; id: string }
   | { type: 'SEARCH_NOT_FOUND' }
   | { type: 'SEARCH_ERROR'; message?: string }
@@ -55,7 +66,8 @@ export type FoodLoggingCommand =
   | { type: 'NONE' }
   | { type: 'FETCH_FOOD_BY_NAME'; name: string }
   | { type: 'FETCH_FOOD_BY_BARCODE'; barcode: string }
-  | { type: 'ANALYZE_MEAL_TEXT'; description: string };
+  | { type: 'ANALYZE_MEAL_TEXT'; description: string }
+  | { type: 'SAVE_FOOD_TO_POCKETBASE'; food: LoggedFood };
 
 export type FoodLoggingResult = {
   state: FoodLoggingState;
