@@ -64,6 +64,22 @@ Reason:
 - Users need a way to turn those results into daily totals.
 - Local state validates the workflow before Supabase persistence is added.
 
+## Completed Next Step: PocketBase Authentication
+
+PocketBase authentication has been implemented as a frontend auth flow.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step_auth_foundation.md
+```
+
+Reason:
+
+- Authentication is part of the MVP scope.
+- The app needs a login/register flow before user-specific persistence.
+- PocketBase provides email/password auth without custom backend auth logic.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.
