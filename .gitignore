@@ -132,6 +132,7 @@ temp/
 # ========================
 junit.xml
 reports/
+.test-build/
 
 # ========================
 # EXPO ASSETS CACHE

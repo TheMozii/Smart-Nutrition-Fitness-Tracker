@@ -160,6 +160,22 @@ Reason:
 - The chart uses persisted PocketBase nutrition records from the last 7 days.
 - A simple calorie chart adds useful trend feedback without adding advanced analytics yet.
 
+## Completed Next Step: Core Tests
+
+Focused frontend and backend tests have been added for core food logging behavior.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step_tests.md
+```
+
+Reason:
+
+- The MVP flow needs regression coverage before more features are added.
+- Reducer tests protect the Command pattern state transitions.
+- Backend mapper and service tests protect nutrition response normalization and AI error handling.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.

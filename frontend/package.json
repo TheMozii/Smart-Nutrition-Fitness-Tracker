@@ -4,7 +4,10 @@
     "start": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "npm run test:types && npm run test:reducer",
+    "test:types": "tsc --noEmit",
+    "test:reducer": "tsc --outDir /private/tmp/sntft-reducer-tests --noEmit false --module commonjs src/features/food-logging/reducer.test.ts && node /private/tmp/sntft-reducer-tests/reducer.test.js"
   },
   "dependencies": {
     "@shopify/react-native-skia": "2.4.18",
