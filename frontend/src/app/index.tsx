@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AuthScreen from './auth';
 import FoodLoggingScreen from './food-logging';
@@ -57,10 +57,15 @@ function SignedInHome({
           <Text style={styles.signOutButtonText}>Sign Out</Text>
         </Pressable>
       </View>
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentBody}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator
+      >
         <Dashboard state={state} />
         <FoodLoggingScreen state={state} dispatch={dispatch} />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -237,7 +242,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    width: '100%',
+  },
+  contentBody: {
+    width: '100%',
     alignItems: 'center',
+    paddingBottom: 20,
   },
   dashboard: {
     width: '100%',

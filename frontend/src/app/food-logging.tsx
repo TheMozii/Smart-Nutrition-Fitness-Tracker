@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  ScrollView,
   View,
   Text,
   TextInput,
@@ -24,12 +23,7 @@ export default function FoodLoggingScreen({
   const statusStyle = buildStatusStyle(state.status);
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.screenContent}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator
-    >
+    <View style={styles.screen}>
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.cardTitleGroup}>
@@ -144,7 +138,7 @@ export default function FoodLoggingScreen({
           )}
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -194,12 +188,8 @@ function buildStatusStyle(status: string) {
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
     width: '100%',
-  },
-  screenContent: {
     padding: 12,
-    paddingBottom: 20,
     alignItems: 'center',
   },
   card: {
