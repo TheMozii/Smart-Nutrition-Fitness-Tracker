@@ -5,9 +5,10 @@ import {
   fetchFoodByBarcode,
   fetchFoodByName,
   loadSavedFoodsFromPocketBase,
+  loadWeeklyTotalsFromPocketBase,
   saveFoodToPocketBase,
 } from './service';
-import { foodLoggingReducer } from './reducer';
+import { createEmptyWeeklyTotals, foodLoggingReducer } from './reducer';
 import {
   FoodLoggingCommand,
   FoodLoggingEvent,
@@ -27,6 +28,7 @@ const initialState: FoodLoggingState = {
     carbs: 0,
     fats: 0,
   },
+  weeklyTotals: createEmptyWeeklyTotals(),
   nextLoggedFoodId: 1,
   message: null,
 };
@@ -87,6 +89,14 @@ export function useFoodLogging({ authToken, userId }: UseFoodLoggingOptions) {
           return;
         }
 
+        if (result.action === 'load_weekly_totals') {
+          dispatch({
+            type: 'LOAD_WEEKLY_TOTALS_SUCCESS',
+            totals: result.totals,
+          });
+          return;
+        }
+
         dispatch({
           type: 'SEARCH_SUCCESS',
           food: result.food,
@@ -137,6 +147,8 @@ async function runFoodLoggingCommand(
       return saveFoodToPocketBase(command.food, authToken, userId);
     case 'LOAD_SAVED_FOODS_FROM_POCKETBASE':
       return loadSavedFoodsFromPocketBase(authToken, userId);
+    case 'LOAD_WEEKLY_TOTALS_FROM_POCKETBASE':
+      return loadWeeklyTotalsFromPocketBase(authToken, userId);
     case 'DELETE_FOOD_FROM_POCKETBASE':
       return deleteFoodFromPocketBase(command.id, authToken);
     case 'NONE':

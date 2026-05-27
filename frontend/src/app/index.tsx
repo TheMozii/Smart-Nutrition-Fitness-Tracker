@@ -105,12 +105,54 @@ function Dashboard({ state }: DashboardProps) {
         <DashboardMetric label="Fats" value={state.dailyTotals.fats} suffix="g" />
       </View>
 
+      <WeeklyCaloriesChart state={state} />
+
       <View style={styles.dashboardFooter}>
         <Text style={styles.dashboardFooterText} numberOfLines={1}>
           {latestFood
             ? `Latest: ${latestFood.name} · ${formatNutritionValue(latestFood.calories)} cal`
             : state.message ?? 'No saved foods for today yet.'}
         </Text>
+      </View>
+    </View>
+  );
+}
+
+type WeeklyCaloriesChartProps = {
+  state: FoodLoggingState;
+};
+
+function WeeklyCaloriesChart({ state }: WeeklyCaloriesChartProps) {
+  const maxCalories = Math.max(
+    1,
+    ...state.weeklyTotals.map((day) => day.totals.calories)
+  );
+
+  return (
+    <View style={styles.weeklyChart}>
+      <View style={styles.weeklyChartHeader}>
+        <Text style={styles.weeklyChartTitle}>7-Day Calories</Text>
+        <Text style={styles.weeklyChartValue}>
+          {formatNutritionValue(maxCalories)} max
+        </Text>
+      </View>
+
+      <View style={styles.barRow}>
+        {state.weeklyTotals.map((day) => {
+          const barHeight = Math.max(
+            4,
+            Math.round((day.totals.calories / maxCalories) * 54)
+          );
+
+          return (
+            <View key={day.date} style={styles.barItem}>
+              <View style={styles.barTrack}>
+                <View style={[styles.barFill, { height: barHeight }]} />
+              </View>
+              <Text style={styles.barLabel}>{day.label.slice(0, 1)}</Text>
+            </View>
+          );
+        })}
       </View>
     </View>
   );
@@ -272,6 +314,58 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 999,
     backgroundColor: '#1f6feb',
+  },
+  weeklyChart: {
+    borderTopWidth: 1,
+    borderTopColor: '#d0d7de',
+    marginTop: 10,
+    paddingTop: 10,
+  },
+  weeklyChartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 8,
+  },
+  weeklyChartTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#222222',
+  },
+  weeklyChartValue: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  barRow: {
+    height: 78,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+  },
+  barItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 5,
+  },
+  barTrack: {
+    width: '100%',
+    height: 58,
+    maxWidth: 34,
+    justifyContent: 'flex-end',
+    borderRadius: 8,
+    backgroundColor: '#e7edf5',
+    overflow: 'hidden',
+  },
+  barFill: {
+    width: '100%',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    backgroundColor: '#1f6feb',
+  },
+  barLabel: {
+    fontSize: 11,
+    color: '#666666',
   },
   dashboardFooter: {
     borderTopWidth: 1,

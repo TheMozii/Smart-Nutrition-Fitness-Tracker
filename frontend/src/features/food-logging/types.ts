@@ -32,6 +32,12 @@ export type NutritionTotals = {
   fats: number;
 };
 
+export type DailyNutritionTotal = {
+  date: string;
+  label: string;
+  totals: NutritionTotals;
+};
+
 export type FoodLoggingState = {
   status: Status;
   mode: SearchMode;
@@ -40,6 +46,7 @@ export type FoodLoggingState = {
   foodSource: FoodSource | null;
   loggedFoods: LoggedFood[];
   dailyTotals: NutritionTotals;
+  weeklyTotals: DailyNutritionTotal[];
   nextLoggedFoodId: number;
   message: string | null;
 };
@@ -59,6 +66,7 @@ export type FoodLoggingEvent =
   | { type: 'SAVE_FOOD_SUCCESS'; food: LoggedFood }
   | { type: 'LOAD_SAVED_FOODS_START' }
   | { type: 'LOAD_SAVED_FOODS_SUCCESS'; foods: LoggedFood[] }
+  | { type: 'LOAD_WEEKLY_TOTALS_SUCCESS'; totals: DailyNutritionTotal[] }
   | { type: 'REMOVE_FOOD_FROM_DAILY_LOG'; id: string }
   | { type: 'DELETE_FOOD_SUCCESS'; id: string }
   | { type: 'SEARCH_NOT_FOUND' }
@@ -72,6 +80,7 @@ export type FoodLoggingCommand =
   | { type: 'ANALYZE_MEAL_TEXT'; description: string }
   | { type: 'SAVE_FOOD_TO_POCKETBASE'; food: LoggedFood }
   | { type: 'LOAD_SAVED_FOODS_FROM_POCKETBASE' }
+  | { type: 'LOAD_WEEKLY_TOTALS_FROM_POCKETBASE' }
   | { type: 'DELETE_FOOD_FROM_POCKETBASE'; id: string };
 
 export type FoodLoggingResult = {

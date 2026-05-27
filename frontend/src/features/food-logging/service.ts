@@ -3,7 +3,13 @@ import {
   searchFoodByBarcode,
   searchFoodByName,
 } from '../../services/api';
-import { FoodSource, LoggedFood, NutritionInfo } from './types';
+import {
+  DailyNutritionTotal,
+  FoodSource,
+  LoggedFood,
+  NutritionInfo,
+  NutritionTotals,
+} from './types';
 
 const DEFAULT_POCKETBASE_URL = 'http://127.0.0.1:8090';
 const POCKETBASE_URL =
@@ -26,6 +32,14 @@ export type SaveFoodResult =
 
 export type LoadSavedFoodsResult =
   | { type: 'success'; action: 'load_saved_foods'; foods: LoggedFood[] }
+  | { type: 'error'; message: string };
+
+export type LoadWeeklyTotalsResult =
+  | {
+      type: 'success';
+      action: 'load_weekly_totals';
+      totals: DailyNutritionTotal[];
+    }
   | { type: 'error'; message: string };
 
 export type DeleteFoodResult =
@@ -228,6 +242,58 @@ export async function loadSavedFoodsFromPocketBase(
   }
 }
 
+export async function loadWeeklyTotalsFromPocketBase(
+  authToken: string,
+  userId: string
+): Promise<LoadWeeklyTotalsResult> {
+  try {
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    startDate.setDate(startDate.getDate() - 6);
+
+    const endDate = new Date();
+    endDate.setHours(0, 0, 0, 0);
+    endDate.setDate(endDate.getDate() + 1);
+
+    const filter = encodeURIComponent(
+      `user = "${userId}" && loggedDate >= "${startDate.toISOString()}" && loggedDate < "${endDate.toISOString()}"`
+    );
+
+    const response = await fetch(
+      `${POCKETBASE_URL}/api/collections/nutritions/records?filter=${filter}&sort=loggedDate&perPage=200`,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return {
+        type: 'error',
+        message: await readPocketBaseError(response),
+      };
+    }
+
+    const data = await response.json();
+    const foods = mapPocketBaseNutritionRecords(data);
+
+    return {
+      type: 'success',
+      action: 'load_weekly_totals',
+      totals: calculateWeeklyTotals(foods, startDate),
+    };
+  } catch (error) {
+    return {
+      type: 'error',
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Could not load weekly nutrition totals from PocketBase.',
+    };
+  }
+}
+
 export async function deleteFoodFromPocketBase(
   id: string,
   authToken: string
@@ -323,6 +389,64 @@ function mapPocketBaseNutritionRecords(data: unknown): LoggedFood[] {
     fats: readNumber(record.fats),
     loggedDate: readString(record.loggedDate),
   }));
+}
+
+function calculateWeeklyTotals(
+  foods: LoggedFood[],
+  startDate: Date
+): DailyNutritionTotal[] {
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + index);
+
+    return {
+      date: formatDateKey(date),
+      label: formatDayLabel(date),
+      totals: createEmptyNutritionTotals(),
+    };
+  });
+
+  const totalsByDate = new Map(days.map((day) => [day.date, day.totals]));
+
+  for (const food of foods) {
+    const date = new Date(food.loggedDate);
+    if (Number.isNaN(date.getTime())) {
+      continue;
+    }
+
+    const totals = totalsByDate.get(formatDateKey(date));
+    if (!totals) {
+      continue;
+    }
+
+    totals.calories = roundNutritionValue(totals.calories + food.calories);
+    totals.protein = roundNutritionValue(totals.protein + food.protein);
+    totals.carbs = roundNutritionValue(totals.carbs + food.carbs);
+    totals.fats = roundNutritionValue(totals.fats + food.fats);
+  }
+
+  return days;
+}
+
+function createEmptyNutritionTotals(): NutritionTotals {
+  return {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+  };
+}
+
+function roundNutritionValue(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function formatDateKey(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDayLabel(date: Date): string {
+  return date.toLocaleDateString(undefined, { weekday: 'short' });
 }
 
 function readString(value: unknown): string {

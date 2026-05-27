@@ -3,6 +3,7 @@ import {
   FoodLoggingResult,
   FoodLoggingState,
   LoggedFood,
+  DailyNutritionTotal,
   NutritionTotals,
 } from './types';
 
@@ -181,7 +182,7 @@ export function foodLoggingReducer(
           dailyTotals: calculateNutritionTotals(loggedFoods),
           message: 'Food saved to daily summary.',
         },
-        command: { type: 'NONE' },
+        command: { type: 'LOAD_WEEKLY_TOTALS_FROM_POCKETBASE' },
       };
     }
 
@@ -204,6 +205,16 @@ export function foodLoggingReducer(
           message: event.foods.length
             ? 'Saved foods loaded.'
             : 'No saved foods for today yet.',
+        },
+        command: { type: 'LOAD_WEEKLY_TOTALS_FROM_POCKETBASE' },
+      };
+    }
+
+    case 'LOAD_WEEKLY_TOTALS_SUCCESS': {
+      return {
+        state: {
+          ...state,
+          weeklyTotals: event.totals,
         },
         command: { type: 'NONE' },
       };
@@ -246,7 +257,7 @@ export function foodLoggingReducer(
           dailyTotals: calculateNutritionTotals(loggedFoods),
           message: 'Food removed from daily summary.',
         },
-        command: { type: 'NONE' },
+        command: { type: 'LOAD_WEEKLY_TOTALS_FROM_POCKETBASE' },
       };
     }
 
@@ -291,6 +302,7 @@ export function foodLoggingReducer(
             carbs: 0,
             fats: 0,
           },
+          weeklyTotals: createEmptyWeeklyTotals(),
           nextLoggedFoodId: 1,
           message: null,
         },
@@ -301,6 +313,29 @@ export function foodLoggingReducer(
     default:
       return { state, command: { type: 'NONE' } };
   }
+}
+
+export function createEmptyWeeklyTotals(): DailyNutritionTotal[] {
+  const today = new Date();
+  const startDate = new Date(today);
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - 6);
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + index);
+
+    return {
+      date: formatDateKey(date),
+      label: formatDayLabel(date),
+      totals: {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fats: 0,
+      },
+    };
+  });
 }
 
 function calculateNutritionTotals(loggedFoods: LoggedFood[]): NutritionTotals {
@@ -322,4 +357,12 @@ function calculateNutritionTotals(loggedFoods: LoggedFood[]): NutritionTotals {
 
 function roundNutritionValue(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+function formatDateKey(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDayLabel(date: Date): string {
+  return date.toLocaleDateString(undefined, { weekday: 'short' });
 }

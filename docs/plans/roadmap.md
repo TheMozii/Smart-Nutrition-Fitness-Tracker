@@ -144,6 +144,22 @@ Reason:
 - The dashboard reuses the existing loaded PocketBase nutrition records.
 - A simple dashboard completes the core MVP nutrition tracking loop before adding weekly charts.
 
+## Completed Next Step: Weekly Nutrition Chart
+
+The signed-in dashboard now shows a compact 7-day calorie chart.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step_weekly_charts.md
+```
+
+Reason:
+
+- Weekly visualization is part of Stage 3 UX improvement work.
+- The chart uses persisted PocketBase nutrition records from the last 7 days.
+- A simple calorie chart adds useful trend feedback without adding advanced analytics yet.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.
