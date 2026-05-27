@@ -21,6 +21,7 @@ Add tests for the food logging reducer and backend food mapping/service behavior
 - Frontend reducer tests for validation, command creation, daily totals, delete behavior, and weekly totals.
 - Backend mapper tests for valid food data, missing nutrition fields, and not-found data.
 - Backend service tests for AI text analysis validation and missing OpenAI API key handling.
+- Backend API route tests for health, food search success, food not found, and AI error mapping.
 - Simple commands for running tests.
 
 ### Exclude
@@ -37,6 +38,7 @@ frontend/package.json
 frontend/src/features/food-logging/reducer.test.ts
 backend/tests/test_food_mapper.py
 backend/tests/test_food_service.py
+backend/tests/test_api_routes.py
 docs/plans/next_step_tests.md
 ```
 

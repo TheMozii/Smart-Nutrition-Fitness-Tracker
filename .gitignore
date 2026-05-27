@@ -88,6 +88,8 @@ htmlcov/
 # ========================
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
 
 # ========================
 # ALEMBIC / MIGRATIONS
