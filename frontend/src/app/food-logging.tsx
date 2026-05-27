@@ -7,20 +7,19 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
-import { useFoodLogging } from '../features/food-logging/hooks';
+import { FoodLoggingEvent, FoodLoggingState } from '../features/food-logging/types';
 
 const DEMO_BARCODE = '3017624010701';
 
 type FoodLoggingScreenProps = {
-  authToken: string;
-  userId: string;
+  state: FoodLoggingState;
+  dispatch: (event: FoodLoggingEvent) => void;
 };
 
 export default function FoodLoggingScreen({
-  authToken,
-  userId,
+  state,
+  dispatch,
 }: FoodLoggingScreenProps) {
-  const { state, dispatch } = useFoodLogging({ authToken, userId });
   const statusText = buildStatusText(state.status, state.message);
   const statusStyle = buildStatusStyle(state.status);
 
@@ -32,10 +31,14 @@ export default function FoodLoggingScreen({
       showsVerticalScrollIndicator
     >
       <View style={styles.card}>
-        <Text style={styles.title}>Food Logging</Text>
-        <Text style={styles.subtitle}>
-          Search by food name, analyze a meal description, or try a sample barcode.
-        </Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardTitleGroup}>
+            <Text style={styles.title}>Food Logging</Text>
+            <Text style={styles.subtitle}>
+              Search, analyze, or scan a sample barcode.
+            </Text>
+          </View>
+        </View>
 
         <TextInput
           placeholder="Enter food name"
@@ -48,41 +51,38 @@ export default function FoodLoggingScreen({
           onSubmitEditing={() => dispatch({ type: 'SUBMIT_SEARCH' })}
         />
 
-        <Pressable
-          onPress={() => dispatch({ type: 'SUBMIT_SEARCH' })}
-          style={[styles.primaryButton, state.status === 'loading' && styles.buttonDisabled]}
-          disabled={state.status === 'loading'}
-        >
-          <Text style={styles.primaryButtonText}>
-            {state.status === 'loading' ? 'Searching...' : 'Search'}
-          </Text>
-        </Pressable>
+        <View style={styles.actionRow}>
+          <Pressable
+            onPress={() => dispatch({ type: 'SUBMIT_SEARCH' })}
+            style={[styles.primaryButton, state.status === 'loading' && styles.buttonDisabled]}
+            disabled={state.status === 'loading'}
+          >
+            <Text style={styles.primaryButtonText} numberOfLines={1}>
+              {state.status === 'loading' ? 'Searching...' : 'Search'}
+            </Text>
+          </Pressable>
 
-        <Pressable
-          onPress={() => dispatch({ type: 'SUBMIT_AI_ANALYSIS' })}
-          style={[styles.secondaryButton, state.status === 'loading' && styles.buttonDisabled]}
-          disabled={state.status === 'loading'}
-        >
-          <Text style={styles.secondaryButtonText}>Analyze with AI</Text>
-        </Pressable>
+          <Pressable
+            onPress={() => dispatch({ type: 'SUBMIT_AI_ANALYSIS' })}
+            style={[styles.secondaryButton, state.status === 'loading' && styles.buttonDisabled]}
+            disabled={state.status === 'loading'}
+          >
+            <Text style={styles.secondaryButtonText} numberOfLines={1}>AI</Text>
+          </Pressable>
 
-        <Pressable
-          onPress={() => {
-            dispatch({ type: 'SCAN_BARCODE', value: DEMO_BARCODE });
-            dispatch({ type: 'SUBMIT_SEARCH' });
-          }}
-          style={[styles.secondaryButton, state.status === 'loading' && styles.buttonDisabled]}
-          disabled={state.status === 'loading'}
-        >
-          <Text style={styles.secondaryButtonText}>Scan Barcode</Text>
-        </Pressable>
-
-        <Text style={styles.helperText}>
-          Demo action: the scan button uses barcode {DEMO_BARCODE}.
-        </Text>
+          <Pressable
+            onPress={() => {
+              dispatch({ type: 'SCAN_BARCODE', value: DEMO_BARCODE });
+              dispatch({ type: 'SUBMIT_SEARCH' });
+            }}
+            style={[styles.secondaryButton, state.status === 'loading' && styles.buttonDisabled]}
+            disabled={state.status === 'loading'}
+          >
+            <Text style={styles.secondaryButtonText} numberOfLines={1}>Barcode</Text>
+          </Pressable>
+        </View>
 
         <View style={[styles.statusBox, statusStyle.box]}>
-          <Text style={styles.statusLabel}>Status</Text>
           <Text style={[styles.statusText, statusStyle.text]}>{statusText}</Text>
         </View>
 
@@ -111,13 +111,7 @@ export default function FoodLoggingScreen({
         ) : null}
 
         <View style={styles.summarySection}>
-          <Text style={styles.sectionTitle}>Daily Summary</Text>
-          <View style={styles.totalsGrid}>
-            <NutritionTotal label="Calories" value={state.dailyTotals.calories} />
-            <NutritionTotal label="Protein" value={state.dailyTotals.protein} suffix="g" />
-            <NutritionTotal label="Carbs" value={state.dailyTotals.carbs} suffix="g" />
-            <NutritionTotal label="Fats" value={state.dailyTotals.fats} suffix="g" />
-          </View>
+          <Text style={styles.sectionTitle}>Logged Foods</Text>
 
           {state.loggedFoods.length ? (
             <View style={styles.loggedFoodList}>
@@ -151,24 +145,6 @@ export default function FoodLoggingScreen({
         </View>
       </View>
     </ScrollView>
-  );
-}
-
-type NutritionTotalProps = {
-  label: string;
-  value: number;
-  suffix?: string;
-};
-
-function NutritionTotal({ label, value, suffix = '' }: NutritionTotalProps) {
-  return (
-    <View style={styles.totalItem}>
-      <Text style={styles.totalLabel}>{label}</Text>
-      <Text style={styles.totalValue}>
-        {formatNutritionValue(value)}
-        {suffix}
-      </Text>
-    </View>
   );
 }
 
@@ -222,91 +198,95 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   screenContent: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: 12,
+    paddingBottom: 20,
     alignItems: 'center',
-    flexGrow: 1,
   },
   card: {
     width: '100%',
-    maxWidth: 420,
+    maxWidth: 760,
     backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 14,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
     elevation: 3,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 10,
+  },
+  cardTitleGroup: {
+    flex: 1,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#222222',
-    marginBottom: 8,
+    marginBottom: 3,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#666666',
-    marginBottom: 16,
   },
   input: {
     borderWidth: 1,
     borderColor: '#d0d7de',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     fontSize: 14,
     backgroundColor: '#ffffff',
-    marginBottom: 12,
+    marginBottom: 10,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 10,
   },
   primaryButton: {
+    flex: 1.3,
     backgroundColor: '#1f6feb',
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 10,
+    minHeight: 42,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   primaryButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
   },
   secondaryButton: {
+    flex: 1,
     borderWidth: 1,
     borderColor: '#1f6feb',
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 10,
+    minHeight: 42,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
   },
   secondaryButtonText: {
     color: '#1f6feb',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
   },
-  helperText: {
-    fontSize: 13,
-    color: '#666666',
-    marginBottom: 16,
-  },
   statusBox: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 10,
+    borderRadius: 10,
     backgroundColor: '#f4f7fb',
-    marginBottom: 16,
-  },
-  statusLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#222222',
-    marginBottom: 6,
+    marginBottom: 12,
   },
   statusText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666666',
   },
   statusErrorBox: {
@@ -322,21 +302,21 @@ const styles = StyleSheet.create({
     color: '#2e7d32',
   },
   resultCard: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 10,
     backgroundColor: '#f4f7fb',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   resultTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#222222',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   resultRow: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#222222',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   resultNote: {
     fontSize: 13,
@@ -345,10 +325,10 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: '#2e7d32',
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderRadius: 10,
+    paddingVertical: 10,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 10,
   },
   addButtonText: {
     color: '#ffffff',
@@ -358,38 +338,16 @@ const styles = StyleSheet.create({
   summarySection: {
     borderTopWidth: 1,
     borderTopColor: '#d0d7de',
-    paddingTop: 16,
+    paddingTop: 12,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#222222',
-    marginBottom: 12,
-  },
-  totalsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  totalItem: {
-    width: '48%',
-    backgroundColor: '#f4f7fb',
-    borderRadius: 12,
-    padding: 12,
-  },
-  totalLabel: {
-    fontSize: 13,
-    color: '#666666',
-    marginBottom: 4,
-  },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#222222',
+    marginBottom: 10,
   },
   loggedFoodList: {
-    gap: 8,
+    gap: 6,
   },
   loggedFoodRow: {
     flexDirection: 'row',
@@ -398,8 +356,8 @@ const styles = StyleSheet.create({
     gap: 12,
     borderWidth: 1,
     borderColor: '#d0d7de',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    padding: 10,
   },
   loggedFoodText: {
     flex: 1,
@@ -417,9 +375,9 @@ const styles = StyleSheet.create({
   removeButton: {
     borderWidth: 1,
     borderColor: '#ff4d4f',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
   },
   removeButtonText: {
     color: '#ff4d4f',

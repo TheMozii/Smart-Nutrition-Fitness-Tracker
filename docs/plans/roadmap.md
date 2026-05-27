@@ -128,6 +128,22 @@ Reason:
 - PocketBase ownership rules protect delete operations.
 - Local totals should update only after persistence succeeds.
 
+## Completed Next Step: Basic Dashboard UI
+
+The signed-in home screen now shows a basic dashboard before the food logging form.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step_dashboard.md
+```
+
+Reason:
+
+- Users need a quick view of today's calories and macros.
+- The dashboard reuses the existing loaded PocketBase nutrition records.
+- A simple dashboard completes the core MVP nutrition tracking loop before adding weekly charts.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.

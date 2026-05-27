@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AuthScreen from './auth';
 import FoodLoggingScreen from './food-logging';
 import { useAuth } from '../features/auth/hooks';
+import { useFoodLogging } from '../features/food-logging/hooks';
+import { FoodLoggingState, NutritionTotals } from '../features/food-logging/types';
 
 export default function HomeScreen() {
   const { state, dispatch, submitAuth } = useAuth();
@@ -17,24 +19,136 @@ export default function HomeScreen() {
   }
 
   return (
+    <SignedInHome
+      email={state.user.email}
+      userId={state.user.id}
+      authToken={state.token ?? ''}
+      onSignOut={() => dispatch({ type: 'SIGN_OUT' })}
+    />
+  );
+}
+
+type SignedInHomeProps = {
+  email: string;
+  userId: string;
+  authToken: string;
+  onSignOut: () => void;
+};
+
+function SignedInHome({
+  email,
+  userId,
+  authToken,
+  onSignOut,
+}: SignedInHomeProps) {
+  const { state, dispatch } = useFoodLogging({ authToken, userId });
+
+  return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.headerLabel}>Signed in as</Text>
-          <Text style={styles.headerEmail}>{state.user.email}</Text>
+          <Text style={styles.headerEmail}>{email}</Text>
         </View>
         <Pressable
-          onPress={() => dispatch({ type: 'SIGN_OUT' })}
+          onPress={onSignOut}
           style={styles.signOutButton}
         >
           <Text style={styles.signOutButtonText}>Sign Out</Text>
         </Pressable>
       </View>
       <View style={styles.content}>
-        <FoodLoggingScreen authToken={state.token ?? ''} userId={state.user.id} />
+        <Dashboard state={state} />
+        <FoodLoggingScreen state={state} dispatch={dispatch} />
       </View>
     </SafeAreaView>
   );
+}
+
+type DashboardProps = {
+  state: FoodLoggingState;
+};
+
+function Dashboard({ state }: DashboardProps) {
+  const latestFood = state.loggedFoods[state.loggedFoods.length - 1];
+
+  return (
+    <View style={styles.dashboard}>
+      <View style={styles.dashboardHeader}>
+        <View style={styles.dashboardTitleGroup}>
+          <Text style={styles.dashboardTitle}>Today</Text>
+          <Text style={styles.dashboardSubtitle}>
+            {state.loggedFoods.length
+              ? `${state.loggedFoods.length} foods logged`
+              : 'Start by logging a food'}
+          </Text>
+        </View>
+        <View style={styles.statusPill}>
+          <Text style={styles.statusPillText}>
+            {state.status === 'loading' ? 'Syncing' : 'Ready'}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.metricGrid}>
+        <DashboardMetric
+          label="Calories"
+          value={state.dailyTotals.calories}
+          target={2200}
+        />
+        <DashboardMetric
+          label="Protein"
+          value={state.dailyTotals.protein}
+          suffix="g"
+        />
+        <DashboardMetric label="Carbs" value={state.dailyTotals.carbs} suffix="g" />
+        <DashboardMetric label="Fats" value={state.dailyTotals.fats} suffix="g" />
+      </View>
+
+      <View style={styles.dashboardFooter}>
+        <Text style={styles.dashboardFooterText} numberOfLines={1}>
+          {latestFood
+            ? `Latest: ${latestFood.name} · ${formatNutritionValue(latestFood.calories)} cal`
+            : state.message ?? 'No saved foods for today yet.'}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+type DashboardMetricProps = {
+  label: keyof NutritionTotals | 'Calories' | 'Protein' | 'Carbs' | 'Fats';
+  value: number;
+  suffix?: string;
+  target?: number;
+};
+
+function DashboardMetric({
+  label,
+  value,
+  suffix = '',
+  target,
+}: DashboardMetricProps) {
+  const progress = target ? Math.min(value / target, 1) : null;
+
+  return (
+    <View style={styles.metricItem}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>
+        {formatNutritionValue(value)}
+        {suffix}
+      </Text>
+      {progress !== null ? (
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function formatNutritionValue(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 const styles = StyleSheet.create({
@@ -81,5 +195,92 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    alignItems: 'center',
+  },
+  dashboard: {
+    width: '100%',
+    maxWidth: 760,
+    backgroundColor: '#ffffff',
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#d0d7de',
+    borderRadius: 0,
+  },
+  dashboardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 10,
+  },
+  dashboardTitleGroup: {
+    flex: 1,
+  },
+  dashboardTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#222222',
+  },
+  dashboardSubtitle: {
+    fontSize: 13,
+    color: '#666666',
+    marginTop: 2,
+  },
+  statusPill: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    backgroundColor: '#edf7ed',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  statusPillText: {
+    color: '#2e7d32',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  metricGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  metricItem: {
+    flexGrow: 1,
+    flexBasis: 120,
+    minHeight: 64,
+    borderRadius: 10,
+    backgroundColor: '#f4f7fb',
+    padding: 10,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 4,
+  },
+  metricValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222222',
+  },
+  progressTrack: {
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: '#d0d7de',
+    marginTop: 7,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: '#1f6feb',
+  },
+  dashboardFooter: {
+    borderTopWidth: 1,
+    borderTopColor: '#d0d7de',
+    marginTop: 10,
+    paddingTop: 8,
+  },
+  dashboardFooterText: {
+    fontSize: 12,
+    color: '#666666',
   },
 });
