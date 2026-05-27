@@ -6,7 +6,7 @@ const DEFAULT_API_URL =
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_API_URL;
 
 export async function getHealth() {
-  const response = await fetch(`${BASE_URL}/health`);
+  const response = await fetchBackend(`${BASE_URL}/health`);
 
   if (!response.ok) {
     throw new Error(`Backend returned ${response.status}`);
@@ -47,7 +47,7 @@ async function readFoodResponse(response: Response): Promise<FoodApiResponse> {
 }
 
 export async function searchFoodByName(name: string): Promise<FoodApiResponse> {
-  const response = await fetch(
+  const response = await fetchBackend(
     `${BASE_URL}/food/search?name=${encodeURIComponent(name)}`
   );
 
@@ -57,7 +57,7 @@ export async function searchFoodByName(name: string): Promise<FoodApiResponse> {
 export async function searchFoodByBarcode(
   barcode: string
 ): Promise<FoodApiResponse> {
-  const response = await fetch(
+  const response = await fetchBackend(
     `${BASE_URL}/food/barcode/${encodeURIComponent(barcode)}`
   );
 
@@ -67,7 +67,7 @@ export async function searchFoodByBarcode(
 export async function analyzeFoodText(
   description: string
 ): Promise<FoodApiResponse> {
-  const response = await fetch(`${BASE_URL}/food/analyze-text`, {
+  const response = await fetchBackend(`${BASE_URL}/food/analyze-text`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -76,4 +76,23 @@ export async function analyzeFoodText(
   });
 
   return readFoodResponse(response);
+}
+
+async function fetchBackend(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  try {
+    return await fetch(input, init);
+  } catch (error) {
+    if (isNetworkError(error)) {
+      throw new Error('Backend is unavailable. Start the FastAPI server and try again.');
+    }
+
+    throw error;
+  }
+}
+
+function isNetworkError(error: unknown): boolean {
+  return error instanceof TypeError;
 }

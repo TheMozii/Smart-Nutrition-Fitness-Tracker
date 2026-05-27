@@ -114,6 +114,22 @@ Open Food Facts (barcode data)
 
 ---
 
+## ▶️ Local Development
+
+Setup and run instructions are documented in:
+
+```txt
+docs/setup.md
+```
+
+Manual smoke testing is documented in:
+
+```txt
+docs/smoke_test.md
+```
+
+---
+
 ## 👨‍💻 Author
 
 **Ruvims Ungeitis**  

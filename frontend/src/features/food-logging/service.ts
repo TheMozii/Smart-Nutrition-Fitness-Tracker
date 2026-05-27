@@ -65,6 +65,13 @@ export async function fetchFoodByName(name: string): Promise<FoodSearchResult> {
       message: response.message ?? "Information about this food couldn't be found.",
     };
   } catch (error) {
+    if (isNetworkError(error)) {
+      return {
+        type: 'error',
+        message: 'PocketBase is unavailable. Start the local database and try again.',
+      };
+    }
+
     return {
       type: 'error',
       message:
@@ -96,6 +103,13 @@ export async function fetchFoodByBarcode(
       message: response.message ?? "Information about this food couldn't be found.",
     };
   } catch (error) {
+    if (isNetworkError(error)) {
+      return {
+        type: 'error',
+        message: 'PocketBase is unavailable. Start the local database and try again.',
+      };
+    }
+
     return {
       type: 'error',
       message:
@@ -127,6 +141,13 @@ export async function analyzeMealText(
       message: response.message ?? "Information about this food couldn't be found.",
     };
   } catch (error) {
+    if (isNetworkError(error)) {
+      return {
+        type: 'error',
+        message: 'PocketBase is unavailable. Start the local database and try again.',
+      };
+    }
+
     return {
       type: 'error',
       message:
@@ -183,6 +204,13 @@ export async function saveFoodToPocketBase(
       },
     };
   } catch (error) {
+    if (isNetworkError(error)) {
+      return {
+        type: 'error',
+        message: 'PocketBase is unavailable. Start the local database and try again.',
+      };
+    }
+
     return {
       type: 'error',
       message:
@@ -371,6 +399,10 @@ function readPocketBaseFieldError(data: unknown): string | null {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function isNetworkError(error: unknown): boolean {
+  return error instanceof TypeError;
 }
 
 function mapPocketBaseNutritionRecords(data: unknown): LoggedFood[] {

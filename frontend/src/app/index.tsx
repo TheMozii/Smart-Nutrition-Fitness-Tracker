@@ -1,5 +1,12 @@
-import React from 'react';
-import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AuthScreen from './auth';
 import FoodLoggingScreen from './food-logging';
@@ -42,6 +49,8 @@ function SignedInHome({
   onSignOut,
 }: SignedInHomeProps) {
   const { state, dispatch } = useFoodLogging({ authToken, userId });
+  const [calorieTarget, setCalorieTarget] = useState('2200');
+  const parsedCalorieTarget = parsePositiveNumber(calorieTarget) ?? 2200;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,7 +72,12 @@ function SignedInHome({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator
       >
-        <Dashboard state={state} />
+        <Dashboard
+          state={state}
+          calorieTarget={parsedCalorieTarget}
+          calorieTargetInput={calorieTarget}
+          onChangeCalorieTarget={setCalorieTarget}
+        />
         <FoodLoggingScreen state={state} dispatch={dispatch} />
       </ScrollView>
     </SafeAreaView>
@@ -72,9 +86,17 @@ function SignedInHome({
 
 type DashboardProps = {
   state: FoodLoggingState;
+  calorieTarget: number;
+  calorieTargetInput: string;
+  onChangeCalorieTarget: (value: string) => void;
 };
 
-function Dashboard({ state }: DashboardProps) {
+function Dashboard({
+  state,
+  calorieTarget,
+  calorieTargetInput,
+  onChangeCalorieTarget,
+}: DashboardProps) {
   const latestFood = state.loggedFoods[state.loggedFoods.length - 1];
 
   return (
@@ -99,7 +121,7 @@ function Dashboard({ state }: DashboardProps) {
         <DashboardMetric
           label="Calories"
           value={state.dailyTotals.calories}
-          target={2200}
+          target={calorieTarget}
         />
         <DashboardMetric
           label="Protein"
@@ -111,6 +133,18 @@ function Dashboard({ state }: DashboardProps) {
       </View>
 
       <WeeklyCaloriesChart state={state} />
+
+      <View style={styles.goalRow}>
+        <Text style={styles.goalLabel}>Calorie goal</Text>
+        <TextInput
+          value={calorieTargetInput}
+          onChangeText={onChangeCalorieTarget}
+          keyboardType="numeric"
+          inputMode="numeric"
+          style={styles.goalInput}
+          maxLength={5}
+        />
+      </View>
 
       <View style={styles.dashboardFooter}>
         <Text style={styles.dashboardFooterText} numberOfLines={1}>
@@ -196,6 +230,11 @@ function DashboardMetric({
 
 function formatNutritionValue(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function parsePositiveNumber(value: string): number | null {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 const styles = StyleSheet.create({
@@ -376,6 +415,34 @@ const styles = StyleSheet.create({
   barLabel: {
     fontSize: 11,
     color: '#666666',
+  },
+  goalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#d0d7de',
+    marginTop: 10,
+    paddingTop: 10,
+  },
+  goalLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#222222',
+  },
+  goalInput: {
+    width: 86,
+    borderWidth: 1,
+    borderColor: '#d0d7de',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    fontSize: 13,
+    color: '#222222',
+    backgroundColor: '#ffffff',
+    textAlign: 'right',
   },
   dashboardFooter: {
     borderTopWidth: 1,

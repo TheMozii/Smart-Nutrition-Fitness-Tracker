@@ -39,6 +39,13 @@ export async function authenticateWithPocketBase(
       message: mode === 'register' ? 'Account created.' : 'Signed in.',
     };
   } catch (error) {
+    if (isNetworkError(error)) {
+      return {
+        type: 'error',
+        message: 'PocketBase is unavailable. Start the local database and try again.',
+      };
+    }
+
     return {
       type: 'error',
       message:
@@ -148,4 +155,8 @@ function buildUsernameFromEmail(email: string): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function isNetworkError(error: unknown): boolean {
+  return error instanceof TypeError;
 }

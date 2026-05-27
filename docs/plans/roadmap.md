@@ -176,6 +176,23 @@ Reason:
 - Reducer tests protect the Command pattern state transitions.
 - Backend mapper and service tests protect nutrition response normalization and AI error handling.
 
+## Completed Next Step: MVP Stabilization
+
+The MVP has been cleaned up with setup documentation, smoke-test documentation, clearer service errors, and an editable calorie goal.
+
+This step is documented in:
+
+```txt
+docs/plans/next_step_mvp_stabilization.md
+```
+
+Reason:
+
+- The app now has multiple local services and needs reliable startup instructions.
+- Manual smoke testing gives a repeatable way to verify the full MVP flow.
+- Clear offline-service messages improve the user experience during development.
+- The calorie target should not remain hardcoded in the dashboard.
+
 ## 🚀 MVP Scope (Minimum Viable Product)
 
 The MVP focuses on delivering core functionality with a simple and usable system.
