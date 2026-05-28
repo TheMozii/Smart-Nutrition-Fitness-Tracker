@@ -10,6 +10,7 @@ export const DEMO_AUTH_TOKEN = 'demo-token';
 type LocalStorageLike = {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
+  removeItem?: (key: string) => void;
 };
 
 export type DemoAuthUser = {
@@ -19,6 +20,7 @@ export type DemoAuthUser = {
 };
 
 const DEMO_USERS_STORAGE_KEY = 'smartNutrition.demo.users';
+const DEMO_SESSION_STORAGE_KEY = 'smartNutrition.demo.session';
 const DEMO_FOODS_STORAGE_PREFIX = 'smartNutrition.demo.foods.';
 const DEMO_WEEKLY_FOODS_STORAGE_PREFIX = 'smartNutrition.demo.weeklyFoods.';
 
@@ -129,6 +131,38 @@ export function signInDemoUser(
   }
 
   return user;
+}
+
+export function readStoredDemoSession(): DemoAuthUser | null {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return null;
+  }
+
+  try {
+    const data = JSON.parse(storage.getItem(DEMO_SESSION_STORAGE_KEY) ?? 'null');
+    return isDemoAuthUser(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeStoredDemoSession(user: DemoAuthUser): void {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return;
+  }
+
+  storage.setItem(DEMO_SESSION_STORAGE_KEY, JSON.stringify(user));
+}
+
+export function clearStoredDemoSession(): void {
+  const storage = getLocalStorage();
+  if (!storage || !storage.removeItem) {
+    return;
+  }
+
+  storage.removeItem(DEMO_SESSION_STORAGE_KEY);
 }
 
 export function readStoredDemoFoods(userId = DEMO_USER_ID): LoggedFood[] {

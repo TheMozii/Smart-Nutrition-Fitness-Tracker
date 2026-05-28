@@ -4,6 +4,7 @@ import {
   registerDemoUser,
   isDemoDataEnabled,
   signInDemoUser,
+  writeStoredDemoSession,
 } from '../food-logging/demoData';
 
 const DEFAULT_POCKETBASE_URL = 'http://127.0.0.1:8090';
@@ -40,6 +41,8 @@ export async function authenticateWithPocketBase(
         message: 'Demo user not found. Register first, then sign in.',
       };
     }
+
+    writeStoredDemoSession(demoUser);
 
     return {
       type: 'success',
