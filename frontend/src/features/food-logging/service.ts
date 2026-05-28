@@ -14,6 +14,7 @@ import {
   DEMO_AUTH_TOKEN,
   DEMO_USER_ID,
   calculateDailyTotals,
+  findDemoFoodByName,
   isDemoDataEnabled,
   readStoredDemoFoods,
   readStoredDemoWeeklyFoods,
@@ -70,15 +71,37 @@ export async function fetchFoodByName(name: string): Promise<FoodSearchResult> {
       };
     }
 
+    const demoFood = isDemoDataEnabled() ? findDemoFoodByName(name) : null;
+    if (demoFood) {
+      return {
+        type: 'success',
+        action: 'search_food',
+        food: demoFood,
+        source: 'manual',
+        message: 'Demo nutrition value. Data is approximate.',
+      };
+    }
+
     return {
       type: 'not_found',
       message: response.message ?? "Information about this food couldn't be found.",
     };
   } catch (error) {
+    const demoFood = isDemoDataEnabled() ? findDemoFoodByName(name) : null;
+    if (demoFood) {
+      return {
+        type: 'success',
+        action: 'search_food',
+        food: demoFood,
+        source: 'manual',
+        message: 'Demo nutrition value. Data is approximate.',
+      };
+    }
+
     if (isNetworkError(error)) {
       return {
         type: 'error',
-        message: 'PocketBase is unavailable. Start the local database and try again.',
+        message: 'Backend is unavailable. Check the deployed API URL and try again.',
       };
     }
 

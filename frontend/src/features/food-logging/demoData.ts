@@ -1,6 +1,7 @@
 import {
   DailyNutritionTotal,
   LoggedFood,
+  NutritionInfo,
   NutritionTotals,
 } from './types';
 
@@ -83,6 +84,79 @@ const demoFoodTemplates = [
   },
 ];
 
+const demoFoodLookup: NutritionInfo[] = [
+  {
+    name: 'Apple',
+    calories: 95,
+    protein: 0.5,
+    carbs: 25,
+    fats: 0.3,
+  },
+  {
+    name: 'Banana',
+    calories: 105,
+    protein: 1.3,
+    carbs: 27,
+    fats: 0.4,
+  },
+  {
+    name: 'Egg',
+    calories: 78,
+    protein: 6.3,
+    carbs: 0.6,
+    fats: 5.3,
+  },
+  {
+    name: 'Chicken Breast',
+    calories: 165,
+    protein: 31,
+    carbs: 0,
+    fats: 3.6,
+  },
+  {
+    name: 'Cooked White Rice',
+    calories: 205,
+    protein: 4.3,
+    carbs: 45,
+    fats: 0.4,
+  },
+  {
+    name: 'Greek Yogurt',
+    calories: 150,
+    protein: 15,
+    carbs: 8,
+    fats: 5,
+  },
+  {
+    name: 'Salmon',
+    calories: 208,
+    protein: 20,
+    carbs: 0,
+    fats: 13,
+  },
+  {
+    name: 'Oatmeal',
+    calories: 154,
+    protein: 6,
+    carbs: 27,
+    fats: 3,
+  },
+  {
+    name: 'Whole Wheat Bread',
+    calories: 80,
+    protein: 4,
+    carbs: 14,
+    fats: 1,
+  },
+  {
+    name: 'Milk',
+    calories: 122,
+    protein: 8,
+    carbs: 12,
+    fats: 4.8,
+  },
+];
+
 export function isDemoDataEnabled(): boolean {
   return process.env.EXPO_PUBLIC_USE_DEMO_DATA === 'true' || isBrowserRuntime();
 }
@@ -131,6 +205,26 @@ export function signInDemoUser(
   }
 
   return user;
+}
+
+export function findDemoFoodByName(query: string): NutritionInfo | null {
+  const normalizedQuery = normalizeFoodSearchText(query);
+  if (!normalizedQuery) {
+    return null;
+  }
+
+  return (
+    demoFoodLookup.find(
+      (food) => normalizeFoodSearchText(food.name) === normalizedQuery
+    ) ??
+    demoFoodLookup.find((food) =>
+      normalizeFoodSearchText(food.name).includes(normalizedQuery)
+    ) ??
+    demoFoodLookup.find((food) =>
+      normalizedQuery.includes(normalizeFoodSearchText(food.name))
+    ) ??
+    null
+  );
 }
 
 export function readStoredDemoSession(): DemoAuthUser | null {
@@ -393,6 +487,10 @@ function createDemoUserId(email: string): string {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function normalizeFoodSearchText(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 function isDemoAuthUser(value: unknown): value is DemoAuthUser {
