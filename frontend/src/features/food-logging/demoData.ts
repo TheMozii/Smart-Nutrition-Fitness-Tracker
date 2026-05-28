@@ -155,6 +155,13 @@ const demoFoodLookup: NutritionInfo[] = [
     carbs: 12,
     fats: 4.8,
   },
+  {
+    name: 'Nutella',
+    calories: 200,
+    protein: 2,
+    carbs: 21,
+    fats: 12,
+  },
 ];
 
 export function isDemoDataEnabled(): boolean {

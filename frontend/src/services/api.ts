@@ -3,7 +3,9 @@ import { Platform } from 'react-native';
 const DEFAULT_API_URL =
   Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_API_URL;
+const BASE_URL = removeTrailingSlashes(
+  process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_API_URL
+);
 
 export async function getHealth() {
   const response = await fetchBackend(`${BASE_URL}/health`);
@@ -95,4 +97,8 @@ async function fetchBackend(
 
 function isNetworkError(error: unknown): boolean {
   return error instanceof TypeError;
+}
+
+function removeTrailingSlashes(value: string): string {
+  return value.replace(/\/+$/, '');
 }
