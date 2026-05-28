@@ -23,6 +23,16 @@ EXPO_PUBLIC_API_URL=http://127.0.0.1:8000
 EXPO_PUBLIC_POCKETBASE_URL=http://127.0.0.1:8090
 ```
 
+For a web demo deployment without PocketBase, enable seeded demo records:
+
+```txt
+EXPO_PUBLIC_USE_DEMO_DATA=true
+```
+
+Demo mode bypasses PocketBase authentication and loads sample nutrition records
+for the daily summary and weekly chart. Food search and AI analysis still use
+the backend API.
+
 ## Start PocketBase
 
 From the project root:

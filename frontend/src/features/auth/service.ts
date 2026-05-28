@@ -1,4 +1,10 @@
 import { AuthMode, AuthUser } from './types';
+import {
+  DEMO_AUTH_TOKEN,
+  DEMO_USER_EMAIL,
+  DEMO_USER_ID,
+  isDemoDataEnabled,
+} from '../food-logging/demoData';
 
 const DEFAULT_POCKETBASE_URL = 'http://127.0.0.1:8090';
 const POCKETBASE_URL =
@@ -22,6 +28,18 @@ export async function authenticateWithPocketBase(
   email: string,
   password: string
 ): Promise<AuthResult> {
+  if (isDemoDataEnabled()) {
+    return {
+      type: 'success',
+      user: {
+        id: DEMO_USER_ID,
+        email: email || DEMO_USER_EMAIL,
+      },
+      token: DEMO_AUTH_TOKEN,
+      message: 'Signed in with demo data.',
+    };
+  }
+
   try {
     if (mode === 'register') {
       await createPocketBaseUser(email, password);

@@ -10,6 +10,14 @@ import {
   NutritionInfo,
   NutritionTotals,
 } from './types';
+import {
+  DEMO_AUTH_TOKEN,
+  DEMO_USER_ID,
+  calculateDailyTotals,
+  createDemoSavedFoods,
+  createDemoWeeklyFoods,
+  isDemoDataEnabled,
+} from './demoData';
 
 const DEFAULT_POCKETBASE_URL = 'http://127.0.0.1:8090';
 const POCKETBASE_URL =
@@ -163,6 +171,17 @@ export async function saveFoodToPocketBase(
   authToken: string,
   userId: string
 ): Promise<SaveFoodResult> {
+  if (isDemoSession(authToken, userId)) {
+    demoSavedFoods = [...demoSavedFoods, food];
+    demoWeeklyFoods = [...demoWeeklyFoods, food];
+
+    return {
+      type: 'success',
+      action: 'save_food',
+      food,
+    };
+  }
+
   try {
     const response = await fetch(
       `${POCKETBASE_URL}/api/collections/nutritions/records`,
@@ -225,6 +244,16 @@ export async function loadSavedFoodsFromPocketBase(
   authToken: string,
   userId: string
 ): Promise<LoadSavedFoodsResult> {
+  if (isDemoSession(authToken, userId)) {
+    ensureDemoFoodsLoaded();
+
+    return {
+      type: 'success',
+      action: 'load_saved_foods',
+      foods: [...demoSavedFoods],
+    };
+  }
+
   try {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
@@ -274,6 +303,20 @@ export async function loadWeeklyTotalsFromPocketBase(
   authToken: string,
   userId: string
 ): Promise<LoadWeeklyTotalsResult> {
+  if (isDemoSession(authToken, userId)) {
+    ensureDemoFoodsLoaded();
+
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    startDate.setDate(startDate.getDate() - 6);
+
+    return {
+      type: 'success',
+      action: 'load_weekly_totals',
+      totals: calculateDailyTotals(demoWeeklyFoods, startDate),
+    };
+  }
+
   try {
     const startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
@@ -326,6 +369,17 @@ export async function deleteFoodFromPocketBase(
   id: string,
   authToken: string
 ): Promise<DeleteFoodResult> {
+  if (isDemoSession(authToken)) {
+    demoSavedFoods = demoSavedFoods.filter((food) => food.id !== id);
+    demoWeeklyFoods = demoWeeklyFoods.filter((food) => food.id !== id);
+
+    return {
+      type: 'success',
+      action: 'delete_food',
+      id,
+    };
+  }
+
   try {
     const response = await fetch(
       `${POCKETBASE_URL}/api/collections/nutritions/records/${encodeURIComponent(id)}`,
@@ -499,4 +553,29 @@ function readFoodSource(value: unknown): FoodSource {
   }
 
   return 'manual';
+}
+
+function isDemoSession(authToken?: string, userId?: string): boolean {
+  return (
+    isDemoDataEnabled() ||
+    authToken === DEMO_AUTH_TOKEN ||
+    userId === DEMO_USER_ID
+  );
+}
+
+let demoSavedFoods: LoggedFood[] = [];
+let demoWeeklyFoods: LoggedFood[] = [];
+
+function ensureDemoFoodsLoaded(): void {
+  if (demoSavedFoods.length === 0) {
+    demoSavedFoods = createDemoSavedFoods();
+  }
+
+  if (demoWeeklyFoods.length === 0) {
+    const todayDateKey = new Date().toISOString().slice(0, 10);
+    const weeklyHistory = createDemoWeeklyFoods().filter(
+      (food) => food.loggedDate.slice(0, 10) !== todayDateKey
+    );
+    demoWeeklyFoods = [...weeklyHistory, ...demoSavedFoods];
+  }
 }

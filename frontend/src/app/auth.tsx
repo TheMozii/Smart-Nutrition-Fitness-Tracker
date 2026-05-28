@@ -1,16 +1,24 @@
 import React from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { AuthEvent, AuthState } from '../features/auth/types';
+import { isDemoDataEnabled } from '../features/food-logging/demoData';
 
 type AuthScreenProps = {
   state: AuthState;
   dispatch: (event: AuthEvent) => void;
   onSubmit: () => void;
+  onDemoSubmit: () => void;
 };
 
-export default function AuthScreen({ state, dispatch, onSubmit }: AuthScreenProps) {
+export default function AuthScreen({
+  state,
+  dispatch,
+  onSubmit,
+  onDemoSubmit,
+}: AuthScreenProps) {
   const isRegisterMode = state.mode === 'register';
   const isLoading = state.status === 'loading';
+  const demoDataEnabled = isDemoDataEnabled();
 
   return (
     <View style={styles.screen}>
@@ -19,7 +27,9 @@ export default function AuthScreen({ state, dispatch, onSubmit }: AuthScreenProp
           {isRegisterMode ? 'Create Account' : 'Sign In'}
         </Text>
         <Text style={styles.subtitle}>
-          Track meals, daily totals, and AI nutrition estimates.
+          {demoDataEnabled
+            ? 'Demo mode uses seeded nutrition records without PocketBase.'
+            : 'Track meals, daily totals, and AI nutrition estimates.'}
         </Text>
 
         <TextInput
@@ -80,8 +90,20 @@ export default function AuthScreen({ state, dispatch, onSubmit }: AuthScreenProp
           </Text>
         </Pressable>
 
+        {!demoDataEnabled ? (
+          <Pressable
+            onPress={onDemoSubmit}
+            style={[styles.demoButton, isLoading && styles.buttonDisabled]}
+            disabled={isLoading}
+          >
+            <Text style={styles.demoButtonText}>Continue with Demo Data</Text>
+          </Pressable>
+        ) : null}
+
         <Text style={styles.note}>
-          PocketBase authentication uses the users collection.
+          {demoDataEnabled
+            ? 'Use any valid email and a password with at least 6 characters.'
+            : 'PocketBase authentication uses the users collection.'}
         </Text>
       </View>
     </View>
@@ -170,6 +192,18 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: '#1f6feb',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  demoButton: {
+    backgroundColor: '#edf7ed',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  demoButtonText: {
+    color: '#2e7d32',
     fontSize: 14,
     fontWeight: '700',
   },
