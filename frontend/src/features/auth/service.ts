@@ -1,9 +1,9 @@
 import { AuthMode, AuthUser } from './types';
 import {
   DEMO_AUTH_TOKEN,
-  DEMO_USER_EMAIL,
-  DEMO_USER_ID,
+  registerDemoUser,
   isDemoDataEnabled,
+  signInDemoUser,
 } from '../food-logging/demoData';
 
 const DEFAULT_POCKETBASE_URL = 'http://127.0.0.1:8090';
@@ -29,14 +29,29 @@ export async function authenticateWithPocketBase(
   password: string
 ): Promise<AuthResult> {
   if (isDemoDataEnabled()) {
+    const demoUser =
+      mode === 'register'
+        ? registerDemoUser(email, password)
+        : signInDemoUser(email, password);
+
+    if (!demoUser) {
+      return {
+        type: 'error',
+        message: 'Demo user not found. Register first, then sign in.',
+      };
+    }
+
     return {
       type: 'success',
       user: {
-        id: DEMO_USER_ID,
-        email: email || DEMO_USER_EMAIL,
+        id: demoUser.id,
+        email: demoUser.email,
       },
       token: DEMO_AUTH_TOKEN,
-      message: 'Signed in with demo data.',
+      message:
+        mode === 'register'
+          ? 'Demo account saved in this browser.'
+          : 'Signed in with saved demo account.',
     };
   }
 

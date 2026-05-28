@@ -7,14 +7,12 @@ type AuthScreenProps = {
   state: AuthState;
   dispatch: (event: AuthEvent) => void;
   onSubmit: () => void;
-  onDemoSubmit: () => void;
 };
 
 export default function AuthScreen({
   state,
   dispatch,
   onSubmit,
-  onDemoSubmit,
 }: AuthScreenProps) {
   const isRegisterMode = state.mode === 'register';
   const isLoading = state.status === 'loading';
@@ -28,7 +26,7 @@ export default function AuthScreen({
         </Text>
         <Text style={styles.subtitle}>
           {demoDataEnabled
-            ? 'Demo mode uses seeded nutrition records without PocketBase.'
+            ? 'Demo mode stores test accounts and nutrition records in this browser.'
             : 'Track meals, daily totals, and AI nutrition estimates.'}
         </Text>
 
@@ -90,19 +88,9 @@ export default function AuthScreen({
           </Text>
         </Pressable>
 
-        {!demoDataEnabled ? (
-          <Pressable
-            onPress={onDemoSubmit}
-            style={[styles.demoButton, isLoading && styles.buttonDisabled]}
-            disabled={isLoading}
-          >
-            <Text style={styles.demoButtonText}>Continue with Demo Data</Text>
-          </Pressable>
-        ) : null}
-
         <Text style={styles.note}>
           {demoDataEnabled
-            ? 'Use any valid email and a password with at least 6 characters.'
+            ? 'Register once, then sign in with the same demo account after refresh.'
             : 'PocketBase authentication uses the users collection.'}
         </Text>
       </View>
@@ -192,18 +180,6 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: '#1f6feb',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  demoButton: {
-    backgroundColor: '#edf7ed',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  demoButtonText: {
-    color: '#2e7d32',
     fontSize: 14,
     fontWeight: '700',
   },

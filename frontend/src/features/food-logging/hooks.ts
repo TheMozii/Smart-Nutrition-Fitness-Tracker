@@ -150,7 +150,7 @@ async function runFoodLoggingCommand(
     case 'LOAD_WEEKLY_TOTALS_FROM_POCKETBASE':
       return loadWeeklyTotalsFromPocketBase(authToken, userId);
     case 'DELETE_FOOD_FROM_POCKETBASE':
-      return deleteFoodFromPocketBase(command.id, authToken);
+      return deleteFoodFromPocketBase(command.id, authToken, userId);
     case 'NONE':
       throw new Error('No command to run.');
   }

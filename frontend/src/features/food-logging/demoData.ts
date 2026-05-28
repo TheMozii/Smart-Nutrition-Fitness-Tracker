@@ -6,7 +6,21 @@ import {
 
 export const DEMO_USER_ID = 'demo-user';
 export const DEMO_AUTH_TOKEN = 'demo-token';
-export const DEMO_USER_EMAIL = 'demo@example.com';
+
+type LocalStorageLike = {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+};
+
+export type DemoAuthUser = {
+  id: string;
+  email: string;
+  password: string;
+};
+
+const DEMO_USERS_STORAGE_KEY = 'smartNutrition.demo.users';
+const DEMO_FOODS_STORAGE_PREFIX = 'smartNutrition.demo.foods.';
+const DEMO_WEEKLY_FOODS_STORAGE_PREFIX = 'smartNutrition.demo.weeklyFoods.';
 
 const demoFoodTemplates = [
   {
@@ -68,7 +82,95 @@ const demoFoodTemplates = [
 ];
 
 export function isDemoDataEnabled(): boolean {
-  return process.env.EXPO_PUBLIC_USE_DEMO_DATA === 'true';
+  return process.env.EXPO_PUBLIC_USE_DEMO_DATA === 'true' || isBrowserRuntime();
+}
+
+export function registerDemoUser(
+  email: string,
+  password: string
+): DemoAuthUser {
+  const users = readDemoUsers();
+  const normalizedEmail = normalizeEmail(email);
+  const existingUser = users.find((user) => user.email === normalizedEmail);
+  const user = {
+    id: existingUser?.id ?? createDemoUserId(normalizedEmail),
+    email: normalizedEmail,
+    password,
+  };
+
+  writeDemoUsers([
+    ...users.filter((savedUser) => savedUser.email !== normalizedEmail),
+    user,
+  ]);
+
+  if (!hasStoredDemoFoodData(user.id)) {
+    seedStoredDemoFoods(user.id);
+  }
+
+  return user;
+}
+
+export function signInDemoUser(
+  email: string,
+  password: string
+): DemoAuthUser | null {
+  const normalizedEmail = normalizeEmail(email);
+  const user = readDemoUsers().find(
+    (savedUser) =>
+      savedUser.email === normalizedEmail && savedUser.password === password
+  );
+
+  if (!user) {
+    return null;
+  }
+
+  if (!hasStoredDemoFoodData(user.id)) {
+    seedStoredDemoFoods(user.id);
+  }
+
+  return user;
+}
+
+export function readStoredDemoFoods(userId = DEMO_USER_ID): LoggedFood[] {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return createDemoSavedFoods();
+  }
+
+  const key = `${DEMO_FOODS_STORAGE_PREFIX}${userId}`;
+  if (storage.getItem(key) !== null) {
+    return readStoredFoodList(storage, key);
+  }
+
+  return seedStoredDemoFoods(userId).savedFoods;
+}
+
+export function writeStoredDemoFoods(
+  userId: string,
+  foods: LoggedFood[]
+): void {
+  writeStoredFoodList(`${DEMO_FOODS_STORAGE_PREFIX}${userId}`, foods);
+}
+
+export function readStoredDemoWeeklyFoods(userId = DEMO_USER_ID): LoggedFood[] {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return createDemoWeeklyFoods();
+  }
+
+  const key = `${DEMO_WEEKLY_FOODS_STORAGE_PREFIX}${userId}`;
+  if (storage.getItem(key) !== null) {
+    return readStoredFoodList(storage, key);
+  }
+
+  return seedStoredDemoFoods(userId).weeklyFoods;
+}
+
+export function writeStoredDemoWeeklyFoods(
+  userId: string,
+  foods: LoggedFood[]
+): void {
+  writeStoredFoodList(`${DEMO_WEEKLY_FOODS_STORAGE_PREFIX}${userId}`, foods);
 }
 
 export function createDemoSavedFoods(today = new Date()): LoggedFood[] {
@@ -168,4 +270,140 @@ function formatDateKey(date: Date): string {
 
 function formatDayLabel(date: Date): string {
   return date.toLocaleDateString(undefined, { weekday: 'short' });
+}
+
+function seedStoredDemoFoods(userId: string): {
+  savedFoods: LoggedFood[];
+  weeklyFoods: LoggedFood[];
+} {
+  const savedFoods = createDemoSavedFoods();
+  const todayDateKey = new Date().toISOString().slice(0, 10);
+  const weeklyHistory = createDemoWeeklyFoods().filter(
+    (food) => food.loggedDate.slice(0, 10) !== todayDateKey
+  );
+  const weeklyFoods = [...weeklyHistory, ...savedFoods];
+
+  writeStoredDemoFoods(userId, savedFoods);
+  writeStoredDemoWeeklyFoods(userId, weeklyFoods);
+
+  return {
+    savedFoods,
+    weeklyFoods,
+  };
+}
+
+function hasStoredDemoFoodData(userId: string): boolean {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return false;
+  }
+
+  return storage.getItem(`${DEMO_FOODS_STORAGE_PREFIX}${userId}`) !== null;
+}
+
+function readDemoUsers(): DemoAuthUser[] {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return [];
+  }
+
+  try {
+    const data = JSON.parse(storage.getItem(DEMO_USERS_STORAGE_KEY) ?? '[]');
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.filter(isDemoAuthUser);
+  } catch {
+    return [];
+  }
+}
+
+function writeDemoUsers(users: DemoAuthUser[]): void {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return;
+  }
+
+  storage.setItem(DEMO_USERS_STORAGE_KEY, JSON.stringify(users));
+}
+
+function readStoredFoodList(
+  storage: LocalStorageLike,
+  key: string
+): LoggedFood[] {
+  try {
+    const data = JSON.parse(storage.getItem(key) ?? '[]');
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.filter(isLoggedFood);
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredFoodList(key: string, foods: LoggedFood[]): void {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return;
+  }
+
+  storage.setItem(key, JSON.stringify(foods));
+}
+
+function createDemoUserId(email: string): string {
+  return `demo-${email.replace(/[^a-z0-9]/g, '-')}`;
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function isDemoAuthUser(value: unknown): value is DemoAuthUser {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.id === 'string' &&
+    typeof value.email === 'string' &&
+    typeof value.password === 'string'
+  );
+}
+
+function isLoggedFood(value: unknown): value is LoggedFood {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.id === 'string' &&
+    typeof value.name === 'string' &&
+    typeof value.source === 'string' &&
+    typeof value.calories === 'number' &&
+    typeof value.protein === 'number' &&
+    typeof value.carbs === 'number' &&
+    typeof value.fats === 'number' &&
+    typeof value.loggedDate === 'string'
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getLocalStorage(): LocalStorageLike | null {
+  const storage = (
+    globalThis as typeof globalThis & {
+      localStorage?: LocalStorageLike;
+    }
+  ).localStorage;
+
+  return storage ?? null;
+}
+
+function isBrowserRuntime(): boolean {
+  return typeof document !== 'undefined';
 }

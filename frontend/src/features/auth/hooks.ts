@@ -2,11 +2,6 @@ import { useReducer } from 'react';
 import { authReducer } from './reducer';
 import { AuthState } from './types';
 import { authenticateWithPocketBase } from './service';
-import {
-  DEMO_AUTH_TOKEN,
-  DEMO_USER_EMAIL,
-  DEMO_USER_ID,
-} from '../food-logging/demoData';
 
 const initialState: AuthState = {
   mode: 'login',
@@ -49,23 +44,10 @@ export function useAuth() {
     dispatch({ type: 'AUTH_ERROR', message: result.message });
   }
 
-  function continueWithDemoData() {
-    dispatch({
-      type: 'AUTH_SUCCESS',
-      user: {
-        id: DEMO_USER_ID,
-        email: state.email || DEMO_USER_EMAIL,
-      },
-      token: DEMO_AUTH_TOKEN,
-      message: 'Signed in with demo data.',
-    });
-  }
-
   return {
     state,
     dispatch,
     submitAuth,
-    continueWithDemoData,
   };
 }
 

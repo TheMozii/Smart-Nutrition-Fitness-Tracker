@@ -29,9 +29,10 @@ For a web demo deployment without PocketBase, enable seeded demo records:
 EXPO_PUBLIC_USE_DEMO_DATA=true
 ```
 
-Demo mode bypasses PocketBase authentication and loads sample nutrition records
-for the daily summary and weekly chart. Food search and AI analysis still use
-the backend API.
+Demo mode stores test accounts and nutrition records in browser `localStorage`.
+Users can register a demo account, sign in again after refresh, add/remove foods,
+and keep demo nutrition records without deploying PocketBase. Food search and AI
+analysis still use the backend API.
 
 ## Start PocketBase
 

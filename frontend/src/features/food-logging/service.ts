@@ -14,9 +14,11 @@ import {
   DEMO_AUTH_TOKEN,
   DEMO_USER_ID,
   calculateDailyTotals,
-  createDemoSavedFoods,
-  createDemoWeeklyFoods,
   isDemoDataEnabled,
+  readStoredDemoFoods,
+  readStoredDemoWeeklyFoods,
+  writeStoredDemoFoods,
+  writeStoredDemoWeeklyFoods,
 } from './demoData';
 
 const DEFAULT_POCKETBASE_URL = 'http://127.0.0.1:8090';
@@ -172,8 +174,10 @@ export async function saveFoodToPocketBase(
   userId: string
 ): Promise<SaveFoodResult> {
   if (isDemoSession(authToken, userId)) {
-    demoSavedFoods = [...demoSavedFoods, food];
-    demoWeeklyFoods = [...demoWeeklyFoods, food];
+    const savedFoods = [...readStoredDemoFoods(userId), food];
+    const weeklyFoods = [...readStoredDemoWeeklyFoods(userId), food];
+    writeStoredDemoFoods(userId, savedFoods);
+    writeStoredDemoWeeklyFoods(userId, weeklyFoods);
 
     return {
       type: 'success',
@@ -245,12 +249,10 @@ export async function loadSavedFoodsFromPocketBase(
   userId: string
 ): Promise<LoadSavedFoodsResult> {
   if (isDemoSession(authToken, userId)) {
-    ensureDemoFoodsLoaded();
-
     return {
       type: 'success',
       action: 'load_saved_foods',
-      foods: [...demoSavedFoods],
+      foods: readStoredDemoFoods(userId),
     };
   }
 
@@ -304,8 +306,6 @@ export async function loadWeeklyTotalsFromPocketBase(
   userId: string
 ): Promise<LoadWeeklyTotalsResult> {
   if (isDemoSession(authToken, userId)) {
-    ensureDemoFoodsLoaded();
-
     const startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
     startDate.setDate(startDate.getDate() - 6);
@@ -313,7 +313,7 @@ export async function loadWeeklyTotalsFromPocketBase(
     return {
       type: 'success',
       action: 'load_weekly_totals',
-      totals: calculateDailyTotals(demoWeeklyFoods, startDate),
+      totals: calculateDailyTotals(readStoredDemoWeeklyFoods(userId), startDate),
     };
   }
 
@@ -367,11 +367,18 @@ export async function loadWeeklyTotalsFromPocketBase(
 
 export async function deleteFoodFromPocketBase(
   id: string,
-  authToken: string
+  authToken: string,
+  userId: string
 ): Promise<DeleteFoodResult> {
-  if (isDemoSession(authToken)) {
-    demoSavedFoods = demoSavedFoods.filter((food) => food.id !== id);
-    demoWeeklyFoods = demoWeeklyFoods.filter((food) => food.id !== id);
+  if (isDemoSession(authToken, userId)) {
+    writeStoredDemoFoods(
+      userId,
+      readStoredDemoFoods(userId).filter((food) => food.id !== id)
+    );
+    writeStoredDemoWeeklyFoods(
+      userId,
+      readStoredDemoWeeklyFoods(userId).filter((food) => food.id !== id)
+    );
 
     return {
       type: 'success',
@@ -561,21 +568,4 @@ function isDemoSession(authToken?: string, userId?: string): boolean {
     authToken === DEMO_AUTH_TOKEN ||
     userId === DEMO_USER_ID
   );
-}
-
-let demoSavedFoods: LoggedFood[] = [];
-let demoWeeklyFoods: LoggedFood[] = [];
-
-function ensureDemoFoodsLoaded(): void {
-  if (demoSavedFoods.length === 0) {
-    demoSavedFoods = createDemoSavedFoods();
-  }
-
-  if (demoWeeklyFoods.length === 0) {
-    const todayDateKey = new Date().toISOString().slice(0, 10);
-    const weeklyHistory = createDemoWeeklyFoods().filter(
-      (food) => food.loggedDate.slice(0, 10) !== todayDateKey
-    );
-    demoWeeklyFoods = [...weeklyHistory, ...demoSavedFoods];
-  }
 }

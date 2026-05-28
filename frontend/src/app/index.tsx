@@ -15,7 +15,7 @@ import { useFoodLogging } from '../features/food-logging/hooks';
 import { FoodLoggingState, NutritionTotals } from '../features/food-logging/types';
 
 export default function HomeScreen() {
-  const { state, dispatch, submitAuth, continueWithDemoData } = useAuth();
+  const { state, dispatch, submitAuth } = useAuth();
 
   if (!state.user) {
     return (
@@ -24,7 +24,6 @@ export default function HomeScreen() {
           state={state}
           dispatch={dispatch}
           onSubmit={submitAuth}
-          onDemoSubmit={continueWithDemoData}
         />
       </SafeAreaView>
     );
