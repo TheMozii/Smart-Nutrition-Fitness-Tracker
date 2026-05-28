@@ -30,6 +30,7 @@ function runTests() {
   testEmptySearchShowsValidationError();
   testSearchByNameCreatesFetchCommand();
   testAddFoodCreatesSaveCommand();
+  testSaveFoodSuccessClearsSearch();
   testLoadingSavedFoodsCalculatesDailyTotalsAndLoadsWeeklyTotals();
   testDeletingFoodUpdatesTotalsAndLoadsWeeklyTotals();
   testWeeklyTotalsAreStored();
@@ -94,6 +95,35 @@ function testAddFoodCreatesSaveCommand() {
       loggedDate: '2026-05-27T10:00:00.000Z',
     },
   });
+}
+
+function testSaveFoodSuccessClearsSearch() {
+  const state: FoodLoggingState = {
+    ...initialState,
+    status: 'success',
+    mode: 'name',
+    query: 'apple',
+    food: {
+      name: 'Apple',
+      calories: 95,
+      protein: 0.5,
+      carbs: 25,
+      fats: 0.3,
+    },
+    foodSource: 'open_food_facts',
+  };
+
+  const result = foodLoggingReducer(state, {
+    type: 'SAVE_FOOD_SUCCESS',
+    food: buildLoggedFood('1', 'Apple', 95, 0.5, 25, 0.3),
+  });
+
+  assertEqual(result.state.status, 'idle', 'status cleared after save');
+  assertEqual(result.state.mode, 'idle', 'mode cleared after save');
+  assertEqual(result.state.query, '', 'query cleared after save');
+  assertEqual(result.state.food, null, 'food result cleared after save');
+  assertEqual(result.state.foodSource, null, 'food source cleared after save');
+  assertEqual(result.state.loggedFoods.length, 1, 'saved food remains logged');
 }
 
 function testLoadingSavedFoodsCalculatesDailyTotalsAndLoadsWeeklyTotals() {

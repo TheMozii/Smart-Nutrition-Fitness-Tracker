@@ -223,10 +223,10 @@ export async function saveFoodToPocketBase(
           name: food.name,
           source: food.source,
           barcode: food.barcode ?? '',
-          calories: food.calories,
-          protein: food.protein,
-          carbs: food.carbs,
-          fats: food.fats,
+          calories: normalizeNutritionNumber(food.calories),
+          protein: normalizeNutritionNumber(food.protein),
+          carbs: normalizeNutritionNumber(food.carbs),
+          fats: normalizeNutritionNumber(food.fats),
           loggedDate: food.loggedDate,
         }),
       }
@@ -570,7 +570,7 @@ function readString(value: unknown): string {
 }
 
 function readNumber(value: unknown): number {
-  return typeof value === 'number' ? value : 0;
+  return normalizeNutritionNumber(value);
 }
 
 function readFoodSource(value: unknown): FoodSource {
@@ -591,4 +591,15 @@ function isDemoSession(authToken?: string, userId?: string): boolean {
     authToken === DEMO_AUTH_TOKEN ||
     userId === DEMO_USER_ID
   );
+}
+
+function normalizeNutritionNumber(value: unknown): number {
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string'
+        ? Number(value)
+        : 0;
+
+  return Number.isFinite(parsed) ? parsed : 0;
 }
